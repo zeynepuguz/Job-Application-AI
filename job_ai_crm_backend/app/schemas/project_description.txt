@@ -1,0 +1,54 @@
+ben aslında biraz da kendi işime yarayacak bir proje yapmak istiyorum. şimdi benim
+için şirketlere başvurmak çok uzun bir iş mail yaz ne yazacağım ne göndereceğim vs.
+düşünmem gerekiyor. o sebeple şirketlere mail gönderen bir sistem kurmak istiyorum
+şöyle olacak: ben uzaktan ve ofisten çalışabileceğim şehirleri gireceğim. ona göre
+oralardaki şirketlere mail atacak ayrıca bunları backend sisteminde tutacak ve
+başvurulan şirketler ve mailleri bana görünecek. ayrıca her şirkete tabii ki özel
+bir mail atmalı. bir de ben ai engineer olmak istiyorum ya o şirketlere bu CV'mi
+ancak diğer şirketler için de ayrı bir cv oluşturacağım onu atacak işte yani
+fullstack+backend+ai bir sistem kurmak istiyorum.
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+
+1. Company eklenir
+2. CV yüklenir
+3. Application oluşturulur
+4. AI mail üretir → generated_emails
+5. Mail gönderilir → email_logs
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+
+Tüm sistem nasıl çalışıyor?
+Client (frontend/postman)
+        ↓
+FastAPI endpoint
+        ↓
+get_db()
+        ↓
+Session (db)
+        ↓
+SQLAlchemy
+        ↓
+PostgreSQL
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+
+
+Restoran örneği 🍽️
+PostgreSQL = mutfak
+engine = mutfağa açılan kapı
+session = garson
+get_db() = her müşteri için yeni garson
+endpoint = sipariş
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+
+models     → database tabloları
+schemas    → API’ye giren/çıkan veri formatları
+routes     → endpointler
+services   → iş mantığı
+main.py    → uygulamayı başlatan yer
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------
