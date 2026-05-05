@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html class="light" lang="tr">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>JobAI - Başvurularım</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        font-family: "Inter", sans-serif;
+      }
+      .material-symbols-outlined {
+        font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+      }
+    </style>
+  </head>
+  <body class="bg-slate-50 text-slate-900 min-h-screen">
+    <header class="sticky top-0 z-20 border-b border-slate-200 bg-white/95 backdrop-blur">
+      <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="material-symbols-outlined text-blue-600" style="font-variation-settings: 'FILL' 1">smart_toy</span>
+          <span class="text-xl font-bold text-blue-600">JobAI</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <a href="./companies.html" class="px-4 py-2 text-sm rounded-lg border border-slate-300 hover:bg-slate-100">Şirketler</a>
+          <a href="./index.html" class="px-4 py-2 text-sm rounded-lg border border-slate-300 hover:bg-slate-100">Yeni Başvuru</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-6 py-8 space-y-6">
+      <section class="bg-white rounded-xl border border-slate-200 p-6">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <h1 class="text-2xl font-semibold">Başvurularım</h1>
+            <p class="text-slate-500 text-sm mt-1">Oluşturduğun ve gönderdiğin tüm başvurular burada listelenir.</p>
+          </div>
+          <div class="grid grid-cols-3 gap-3 w-full md:w-auto">
+            <div class="bg-slate-50 rounded-lg p-3 border border-slate-200 min-w-[120px]">
+              <p class="text-xs text-slate-500">Toplam</p>
+              <p id="statTotal" class="text-xl font-semibold">0</p>
+            </div>
+            <div class="bg-amber-50 rounded-lg p-3 border border-amber-200 min-w-[120px]">
+              <p class="text-xs text-amber-700">Taslak</p>
+              <p id="statDraft" class="text-xl font-semibold text-amber-700">0</p>
+            </div>
+            <div class="bg-green-50 rounded-lg p-3 border border-green-200 min-w-[120px]">
+              <p class="text-xs text-green-700">Gönderildi</p>
+              <p id="statSent" class="text-xl font-semibold text-green-700">0</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="bg-white rounded-xl border border-slate-200 p-6 space-y-4">
+        <div class="flex flex-col md:flex-row gap-3">
+          <input
+            id="searchInput"
+            type="text"
+            placeholder="Şirket URL, pozisyon veya konu ara..."
+            class="flex-1 rounded-lg border-slate-300 focus:border-blue-500 focus:ring-blue-500"
+          />
+          <select id="statusFilter" aria-label="Durum filtresi" class="rounded-lg border-slate-300 focus:border-blue-500 focus:ring-blue-500 md:w-48">
+            <option value="all">Tüm durumlar</option>
+            <option value="draft">Taslak</option>
+            <option value="sent">Gönderildi</option>
+          </select>
+        </div>
+
+        <div id="emptyState" class="hidden rounded-lg border border-dashed border-slate-300 p-8 text-center text-slate-500">
+          Henüz başvuru kaydı yok. Yeni başvuru oluşturmak için yukarıdaki "Yeni Başvuru" butonunu kullan.
+        </div>
+
+        <div id="applicationsList" class="space-y-3"></div>
+      </section>
+    </main>
+
+    <script type="module" src="./applications.js"></script>
+  </body>
+</html>

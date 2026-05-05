@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html class="light" lang="tr">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>JobAI - Şirketler</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        font-family: "Inter", sans-serif;
+      }
+      .material-symbols-outlined {
+        font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+      }
+    </style>
+  </head>
+  <body class="bg-slate-50 text-slate-900 min-h-screen">
+    <header class="sticky top-0 z-20 border-b border-slate-200 bg-white/95 backdrop-blur">
+      <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="material-symbols-outlined text-blue-600" style="font-variation-settings: 'FILL' 1">smart_toy</span>
+          <span class="text-xl font-bold text-blue-600">JobAI</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <a href="./applications.html" class="px-4 py-2 text-sm rounded-lg border border-slate-300 hover:bg-slate-100">Başvurular</a>
+          <a href="./index.html" class="px-4 py-2 text-sm rounded-lg border border-slate-300 hover:bg-slate-100">Yeni Başvuru</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-6 py-8 space-y-6">
+      <section class="bg-white rounded-xl border border-slate-200 p-6 space-y-4">
+        <h1 class="text-2xl font-semibold">Şirket Arama ve Başvuru Durumu</h1>
+        <p class="text-sm text-slate-500">Kayıtlı şirketleri arayın. Sonuçta şirketin başvurulup başvurulmadığı görünsün.</p>
+
+        <div class="flex flex-col md:flex-row gap-3">
+          <input
+            id="companySearchInput"
+            type="text"
+            placeholder="Şirket adı veya website yaz..."
+            class="flex-1 rounded-lg border-slate-300 focus:border-blue-500 focus:ring-blue-500"
+          />
+          <button
+            id="btnCompanySearch"
+            type="button"
+            class="px-5 py-2 rounded-lg border border-slate-300 bg-white hover:bg-slate-100"
+          >
+            Ara
+          </button>
+        </div>
+      </section>
+
+      <section class="bg-white rounded-xl border border-slate-200 p-6">
+        <div id="companiesEmpty" class="hidden rounded-lg border border-dashed border-slate-300 p-8 text-center text-slate-500">
+          Sonuç bulunamadı. Şirket kayıtlı değil.
+        </div>
+        <div id="companiesList" class="space-y-3"></div>
+      </section>
+    </main>
+
+    <script type="module" src="./companies.js"></script>
+  </body>
+</html>
