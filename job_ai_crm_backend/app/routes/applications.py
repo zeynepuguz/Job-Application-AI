@@ -30,8 +30,8 @@ from app.services.ai_analyzer import analyze_with_ai
 from app.services.email_generator import generate_email
 from app.services.email_refiner import refine_email
 from app.services.mail_sender import send_real_email
-
-
+from app.services.vector_store import upsert_company_text, search_company_context
+from app.services.company_chat import answer_company_question
 router = APIRouter(
     prefix="/applications",
     tags=["Applications"]
@@ -192,6 +192,14 @@ def prepare_application(
             db.add(company)
             db.commit()
             db.refresh(company)
+            try:
+                upsert_company_text(
+                    company_id=str(company.id),
+                    website=company.website,
+                    text=text
+                )
+            except Exception as e:
+                print("PINECONE UPSERT ERROR:", e)
 
     cv_role_type = choose_cv_role_type(request.role)
 

@@ -7,6 +7,11 @@ from sqlalchemy import text
 from app.database import SessionLocal
 from app.routes.companies import router as companies_router
 from app.routes import applications
+
+from app.models.company import Company
+from app.models.application import Application
+from app.models.company_chat_message import CompanyChatMessage
+
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -24,8 +29,6 @@ app.include_router(applications.router)
 def cleanup_duplicate_companies_by_email() -> None:
     db = SessionLocal()
     try:
-        # Ayni e-postaya sahip sirketlerde en eski kaydi koru,
-        # applications.company_id referanslarini korunan kayda tasiyip digerlerini sil.
         db.execute(text("""
             WITH ranked AS (
                 SELECT

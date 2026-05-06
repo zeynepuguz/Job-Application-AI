@@ -111,6 +111,101 @@ function showContactEmailEditor(visible) {
   editor.classList.toggle("hidden", !visible);
 }
 
+function setChatCompanyInfo() {
+  const info = $("chatCompanyInfo");
+  if (!info) return;
+
+  if (!currentCompanyId) {
+    info.textContent = "Henüz şirket seçilmedi.";
+    return;
+  }
+
+  const selected = companies.find((c) => c.id === currentCompanyId);
+  info.textContent = `Seçili şirket: ${
+    selected?.name || selected?.website || currentCompanyId
+  }`;
+}
+
+function appendChatMessage(role, text) {
+  const container = $("companyChatMessages");
+  if (!container) return;
+
+  if (
+    container.children.length === 1 &&
+    container.firstElementChild?.classList.contains("text-slate-500")
+  ) {
+    container.innerHTML = "";
+  }
+
+  const item = document.createElement("div");
+  item.className = role === "user"
+    ? "ml-auto max-w-[90%] rounded-lg px-md py-sm bg-primary text-on-primary text-body-sm whitespace-pre-wrap"
+    : "mr-auto max-w-[90%] rounded-lg px-md py-sm bg-white border border-outline-variant text-body-sm text-on-surface whitespace-pre-wrap";
+  item.textContent = text;
+  container.appendChild(item);
+  container.scrollTop = container.scrollHeight;
+}
+
+function clearCompanyChat() {
+  const container = $("companyChatMessages");
+  if (!container) return;
+  container.innerHTML = `
+    <div class="text-body-sm text-slate-500">
+      Şirket seçip soru yazdığınızda sohbet burada görünür.
+    </div>
+  `;
+}
+
+async function askCompanyQuestion() {
+  clearError();
+
+  if (!currentCompanyId) {
+    setError("Lütfen önce bir şirket seçin veya URL ile e-posta oluşturun.");
+    return;
+  }
+
+  const question = ($("companyQuestion")?.value || "").trim();
+  if (!question) {
+    setError("Lütfen şirkete sorulacak bir soru yazın.");
+    return;
+  }
+
+  const btn = $("btnAskCompany");
+  const questionInput = $("companyQuestion");
+
+  if (btn) btn.disabled = true;
+  appendChatMessage("user", question);
+  appendChatMessage("assistant", "Yanıt hazırlanıyor...");
+  if (questionInput) questionInput.value = "";
+
+  try {
+    const res = await fetch(`/companies/${currentCompanyId}/chat`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ question }),
+    });
+
+    if (!res.ok) {
+      throw new Error(await parseErrorDetail(res));
+    }
+
+    const data = await res.json();
+    const container = $("companyChatMessages");
+    if (container?.lastElementChild) {
+      container.lastElementChild.textContent =
+        data.answer || "Bu şirket hakkında yeterli bilgi bulunamadı.";
+    }
+  } catch (e) {
+    const container = $("companyChatMessages");
+    if (container?.lastElementChild) {
+      container.lastElementChild.textContent = "Yanıt alınamadı.";
+    }
+    setError(e.message || "Şirket sorusu cevaplanamadı.");
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
 async function saveContactEmail() {
   clearError();
 
@@ -174,6 +269,55 @@ function setupContactEmailEditor() {
   if ($("btnSaveContactEmail")) {
     $("btnSaveContactEmail").addEventListener("click", async () => {
       await saveContactEmail();
+    });
+  }
+}
+
+function setupCompanyChat() {
+  if ($("btnAskCompany")) {
+    $("btnAskCompany").addEventListener("click", async () => {
+      await askCompanyQuestion();
+    });
+  }
+
+  if ($("btnClearCompanyChat")) {
+    $("btnClearCompanyChat").addEventListener("click", async () => {
+      clearError();
+
+      if (!currentCompanyId) {
+        clearCompanyChat();
+        return;
+      }
+
+      const clearBtn = $("btnClearCompanyChat");
+      if (clearBtn) clearBtn.disabled = true;
+
+      try {
+        const res = await fetch(`/companies/${currentCompanyId}/chat`, {
+          method: "DELETE",
+        });
+
+        if (!res.ok) {
+          throw new Error(await parseErrorDetail(res));
+        }
+
+        clearCompanyChat();
+        setSuccessText("Şirket sohbet geçmişi temizlendi.");
+        setSuccess(true);
+      } catch (e) {
+        setError(e.message || "Sohbet geçmişi temizlenemedi.");
+      } finally {
+        if (clearBtn) clearBtn.disabled = false;
+      }
+    });
+  }
+
+  if ($("companyQuestion")) {
+    $("companyQuestion").addEventListener("keydown", async (e) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        await askCompanyQuestion();
+      }
     });
   }
 }
@@ -258,6 +402,8 @@ function renderCompanyList(list) {
         company.name || company.website || company.id
       }`;
       setContactEmail(company.contact_email);
+      setChatCompanyInfo();
+      clearCompanyChat();
     });
 
     companyList.appendChild(item);
@@ -299,10 +445,13 @@ function setupApplicationMode() {
         currentCompanyId = null;
         $("selectedCompanyText").textContent = "Henüz şirket seçilmedi.";
         resetContactEmail();
+        setChatCompanyInfo();
+        clearCompanyChat();
       } else {
         hide($("urlInputWrapper"));
         show($("companySelectWrapper"));
         await loadCompanies();
+        setChatCompanyInfo();
       }
     });
   });
@@ -607,6 +756,8 @@ $("btnGenerate").addEventListener("click", async () => {
 
     applicationId = data.application_id;
     currentCompanyId = data.company_id || (mode === "company" ? companyId : null);
+    setChatCompanyInfo();
+    clearCompanyChat();
 
     updatePreview(data.subject, data.body);
     setContactEmail(data.contact_email);
@@ -768,7 +919,10 @@ $("btnSend").addEventListener("click", async () => {
 
 setupApplicationMode();
 setupContactEmailEditor();
+setupCompanyChat();
 syncCvCard("ai_engineer");
+setChatCompanyInfo();
+clearCompanyChat();
 
 if ($("btnRefreshApplications")) {
   $("btnRefreshApplications").addEventListener("click", () => {

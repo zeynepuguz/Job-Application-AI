@@ -503,6 +503,57 @@
               </span>
             </button>
           </section>
+
+          <section class="bg-surface-container-lowest p-xl rounded-xl border border-outline-variant shadow-sm">
+            <div class="flex items-center gap-sm mb-lg">
+              <span
+                class="bg-secondary text-on-secondary w-6 h-6 rounded-full flex items-center justify-center text-label-sm"
+              >
+                6
+              </span>
+              <h2 class="text-h2 text-on-surface">Şirkete Soru Sor (RAG)</h2>
+            </div>
+
+            <div class="space-y-md">
+              <p id="chatCompanyInfo" class="text-label-sm text-slate-500">
+                Henüz şirket seçilmedi.
+              </p>
+
+              <div
+                id="companyChatMessages"
+                class="border border-outline-variant rounded-lg p-md bg-surface-container-low h-64 overflow-y-auto space-y-sm"
+              >
+                <div class="text-body-sm text-slate-500">
+                  Şirket seçip soru yazdığınızda sohbet burada görünür.
+                </div>
+              </div>
+
+              <textarea
+                id="companyQuestion"
+                class="w-full px-md py-sm bg-white border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all text-body-md"
+                placeholder="Örn: Bu şirketin ana faaliyet alanı nedir?"
+                rows="3"
+              ></textarea>
+
+              <div class="flex items-center gap-sm">
+                <button
+                  type="button"
+                  id="btnAskCompany"
+                  class="flex-1 bg-white border border-outline text-on-surface font-medium py-md rounded-lg hover:bg-slate-50 active:scale-95 duration-150 transition-all flex items-center justify-center gap-2"
+                >
+                  <span class="material-symbols-outlined text-lg">psychology</span>
+                  <span>Soruyu Gönder</span>
+                </button>
+                <button
+                  type="button"
+                  id="btnClearCompanyChat"
+                  class="px-md py-md bg-white border border-outline-variant rounded-lg hover:bg-surface-container-low transition-all"
+                >
+                  Sohbeti Temizle
+                </button>
+              </div>
+            </div>
+          </section>
         </div>
       </div>
     </main>

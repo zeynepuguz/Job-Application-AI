@@ -4,13 +4,16 @@ from sqlalchemy.exc import IntegrityError
 import re
 
 from app.database import get_db
+from app.models.company_chat_message import CompanyChatMessage
 from app.models.company import Company
 from app.schemas.company import (
     CompanyCreate,
     CompanyAnalyzeRequest,
     CompanyResponse,
     CompanyContactEmailUpdateRequest,
-    CompanyContactEmailUpdateResponse
+    CompanyContactEmailUpdateResponse,
+    CompanyChatRequest,
+    CompanyChatResponse
 )
 from app.services.url_analyzer import (
     fetch_website_text,
@@ -18,12 +21,14 @@ from app.services.url_analyzer import (
     normalize_url
 )
 from app.services.ai_analyzer import analyze_with_ai
-
+from app.services.vector_store import upsert_company_text
+from app.services.company_chat import answer_company_question
 
 router = APIRouter(
     prefix="/companies",
     tags=["Companies"]
 )
+
 
 
 def normalize_email(email: str | None) -> str | None:
@@ -126,6 +131,15 @@ def analyze_company_url(
     db.commit()
     db.refresh(company)
 
+    try:
+        upsert_company_text(
+            company_id=str(company.id),
+            website=company.website,
+            text=text
+        )
+    except Exception as e:
+        print("PINECONE UPSERT ERROR:", e)
+
     return company
 
 
@@ -160,4 +174,56 @@ def update_company_contact_email(
     return {
         "company_id": company.id,
         "contact_email": company.contact_email
+    }
+
+
+@router.post("/{company_id}/chat", response_model = CompanyChatResponse)
+def chat_with_company(
+    company_id: str,
+    request: CompanyChatRequest,
+    db: Session = Depends(get_db)
+):
+    company = (
+        db.query(Company)
+        .filter(Company.id == company_id)
+        .first()
+    )
+
+    if not company:
+        raise HTTPException(status_code=404, detail="Company not found")
+
+    answer = answer_company_question(
+    db=db,
+    company_id=str(company.id),
+    question=request.question
+    )
+
+    return {
+        "company_id": company.id,
+        "question": request.question,
+        "answer": answer
+    }
+
+@router.delete("/{company_id}/chat")
+def clear_company_chat(
+    company_id: str,
+    db: Session = Depends(get_db)
+):
+    company = (
+        db.query(Company)
+        .filter(Company.id == company_id)
+        .first()
+    )
+
+    if not company:
+        raise HTTPException(status_code=404, detail="Company not found")
+
+    db.query(CompanyChatMessage).filter(
+        CompanyChatMessage.company_id == company.id
+    ).delete()
+
+    db.commit()
+
+    return {
+        "message": "Company chat history cleared successfully"
     }

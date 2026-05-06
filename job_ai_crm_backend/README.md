@@ -1,30 +1,43 @@
 # Job AI CRM — Backend
 
-AI destekli iş başvuru takibi: şirket web sitesinden bilgi çıkarma, başvuru ve kişiselleştirilmiş e-posta üretimi, isteğe bağlı düzeltme ve Gmail üzerinden gönderim. API, **FastAPI** ve **PostgreSQL** üzerinde çalışır.
+Bu backend, Job AI CRM uygulamasının API ve AI servis katmanını sağlar.  
+FastAPI + PostgreSQL üzerinde çalışır; OpenAI ve Pinecone ile RAG tabanlı şirket chatbot desteği içerir.
+
+## Teknolojiler
+
+- FastAPI
+- SQLAlchemy
+- PostgreSQL
+- Pydantic
+- OpenAI (chat completions + embeddings)
+- Pinecone (vector database)
+- Requests + BeautifulSoup
+- SMTP (Gmail)
 
 ## Özellikler
 
-- **Şirketler:** Manuel kayıt veya URL ile site içeriğini çekip (BeautifulSoup) yapılandırılmış alanlar + OpenAI ile zenginleştirme (`/companies`).
-- **Başvurular:** Verilen URL ve hedef rol için aktif CV seçimi, AI ile konu ve gövde üretimi, taslak olarak veritabanına yazma (`/applications/prepare`).
-- **E-posta iyileştirme:** Doğal dil talimatıyla konu/gövde güncelleme (`/applications/{id}/refine-email`).
-- **Gönderim:** SMTP (Gmail) ile ileti ve rol tipine göre PDF CV eki (`/applications/{id}/send`).
+- Şirket URL analizi ve şirket kaydı oluşturma
+- Şirketleri e-posta bazında tekilleştirme, mükerrer kaydı engelleme
+- Şirket metnini chunk + embedding ile Pinecone’a upsert etme
+- RAG tabanlı şirket soru-cevap endpoint’i
+- Başvuru e-postası üretme / refine etme / gönderme
+- Şirket iletişim e-postasını manuel güncelleme
 
 ## Gereksinimler
 
 - Python 3.10+
 - PostgreSQL
-- OpenAI API anahtarı
-- Gmail için uygulama şifresi (SMTP)
+- OpenAI API key
+- Pinecone API key + index
+- Gmail SMTP app password (gönderim için)
 
 ## Kurulum
 
 ```bash
 python -m venv .venv
 .venv\Scripts\activate
-pip install fastapi uvicorn sqlalchemy psycopg2-binary python-dotenv pydantic openai requests beautifulsoup4
+pip install fastapi uvicorn sqlalchemy psycopg2-binary python-dotenv pydantic openai pinecone requests beautifulsoup4
 ```
-
-Proje kökünde `.env` dosyası oluşturun (örnek değişkenler aşağıda). Veritabanı tabloları için repoda Alembic yok; şemayı kendi sürecinizle oluşturmanız gerekir (ör. SQL ile veya bir kerelik `Base.metadata.create_all(engine)` script’i).
 
 Uygulamayı çalıştırma:
 
@@ -35,45 +48,71 @@ uvicorn app.main:app --reload
 - API: `http://127.0.0.1:8000`
 - Swagger: `http://127.0.0.1:8000/docs`
 
-## Ortam değişkenleri (`.env`)
+## Ortam Değişkenleri (`.env`)
 
 | Değişken | Açıklama |
 |----------|----------|
-| `DATABASE_URL` | PostgreSQL bağlantı URL’si (örn. `postgresql://user:pass@localhost:5432/dbname`) |
-| `OPENAI_API_KEY` | OpenAI istemcisi için |
-| `SMTP_EMAIL` | Gönderen Gmail adresi |
-| `SMTP_APP_PASSWORD` | Gmail uygulama şifresi |
-| `AI_ENGINEER_CV_PATH` | `ai_engineer` rolü için PDF CV dosya yolu |
-| `BACKEND_AI_ENGINEER_CV_PATH` | `backend_ai_engineer` rolü için PDF CV dosya yolu |
+| `DATABASE_URL` | PostgreSQL bağlantı URL’si |
+| `OPENAI_API_KEY` | OpenAI istemcisi için API anahtarı |
+| `PINECONE_API_KEY` | Pinecone API anahtarı |
+| `PINECONE_INDEX_NAME` | Kullanılacak Pinecone index adı |
+| `SMTP_EMAIL` | Gönderen e-posta adresi |
+| `SMTP_APP_PASSWORD` | SMTP uygulama şifresi |
+| `AI_ENGINEER_CV_PATH` | `ai_engineer` rolü için CV PDF yolu |
+| `BACKEND_AI_ENGINEER_CV_PATH` | `backend_ai_engineer` rolü için CV PDF yolu |
 
-`.env` ve `CVs/` gibi hassas/yerel dosyalar `.gitignore` içindedir.
+## API Özeti
 
-## API özeti
+### Companies
 
 | Yöntem | Yol | Açıklama |
 |--------|-----|----------|
-| `GET` | `/` | Sağlık kontrolü |
-| `POST` | `/companies/` | Şirket oluştur |
-| `GET` | `/companies/` | Tüm şirketleri listele |
-| `POST` | `/companies/analyze-url` | URL’den site metni + AI analizi ile şirket kaydı |
-| `POST` | `/applications/prepare` | URL, `role`, isteğe bağlı `language` — başvuru + taslak e-posta |
-| `POST` | `/applications/{application_id}/refine-email` | Gövde/konu iyileştirme (`instruction`) |
-| `POST` | `/applications/{application_id}/send` | E-postayı gönder, durumu `sent` yap |
+| `GET` | `/companies/` | Şirketleri listele |
+| `POST` | `/companies/analyze-url` | URL’den şirket çıkar + kaydet + Pinecone upsert |
+| `POST` | `/companies/{company_id}/contact-email` | Şirket iletişim e-postasını güncelle |
+| `POST` | `/companies/{company_id}/chat` | Seçili şirket için RAG tabanlı soru-cevap |
+| `DELETE` | `/companies/{company_id}/chat` | Seçili şirketin sohbet geçmişini temizle |
 
-**Not:** `prepare` akışı, veritabanında `is_active = true` ve uygun `role_type` (`ai_engineer` veya `backend_ai_engineer`) ile bir **CV** kaydı bekler. Rol metni içinde “backend” geçerse `backend_ai_engineer` seçilir; aksi halde `ai_engineer`. Gönderimde ilgili `*_CV_PATH` ile PDF eklenir.
+### Applications
 
-## Proje yapısı
+| Yöntem | Yol | Açıklama |
+|--------|-----|----------|
+| `POST` | `/applications/prepare` | Başvuru + taslak e-posta üretimi |
+| `POST` | `/applications/{application_id}/refine-email` | E-posta metnini talimatla düzenleme |
+| `POST` | `/applications/{application_id}/send` | E-postayı gönderme |
+| `GET` | `/applications/sent` | Gönderilmiş başvuruları listeleme |
 
-```
+## RAG Akışı (Şirket Chatbot)
+
+1. Şirket URL’sinden çekilen metin chunk’lara bölünür.
+2. Her chunk embedding’e çevrilir (`text-embedding-3-small`).
+3. Pinecone index’e `company_id` metadata’sı ile upsert edilir.
+4. Kullanıcı soru sorduğunda soru embedding’i alınır.
+5. Pinecone’dan `company_id` filtresiyle en ilgili parçalar çekilir.
+6. Bu bağlam OpenAI chat modeline verilerek Türkçe yanıt üretilir.
+
+## Sohbet Geçmişi
+
+- Şirket sohbeti `company_id` bazında yönetilir.
+- `DELETE /companies/{company_id}/chat` endpoint’i, ilgili şirkete ait kayıtlı sohbet mesajlarını temizlemek için kullanılır.
+
+## Dizin Yapısı
+
+```text
 app/
-  main.py           # FastAPI uygulaması ve router’lar
-  database.py       # SQLAlchemy engine ve session
-  models/           # Tablo modelleri (companies, cvs, applications, generated_emails)
-  schemas/          # Pydantic şemaları
-  routes/           # companies, applications
-  services/         # url_analyzer, ai_analyzer, email_generator, email_refiner, mail_sender
+  main.py
+  database.py
+  models/
+  schemas/
+  routes/
+    companies.py
+    applications.py
+  services/
+    url_analyzer.py
+    ai_analyzer.py
+    vector_store.py
+    company_chat.py
+    email_generator.py
+    email_refiner.py
+    mail_sender.py
 ```
-
-## Lisans
-
-Belirtilmemiş; depo sahibinin tercihine göre eklenebilir.

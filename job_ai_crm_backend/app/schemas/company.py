@@ -46,3 +46,13 @@ class CompanyContactEmailUpdateRequest(BaseModel):
 class CompanyContactEmailUpdateResponse(BaseModel):
     company_id: UUID
     contact_email: str
+
+
+class CompanyChatRequest(BaseModel):
+    question: str
+
+
+class CompanyChatResponse(BaseModel):
+    company_id: UUID
+    question: str
+    answer: str
