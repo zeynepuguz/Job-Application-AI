@@ -1,20 +1,328 @@
 const $ = (id) => document.getElementById(id);
 
 let applicationId = null;
+let currentCompanyId = null;
 let canSendApplication = false;
+let companies = [];
+
 const STORAGE_KEY = "jobai_applications";
+
 const cvProfiles = {
   ai_engineer: {
     label: "AI Engineer CV",
-    desc: "Genel AI rollerine uygun varsayilan CV.",
+    desc: "Genel AI rollerine uygun varsayılan CV.",
     suggestedRole: "AI Engineer",
   },
   backend_ai_engineer: {
     label: "Backend AI Engineer CV",
-    desc: "Backend + model servisleme odakli CV.",
+    desc: "Backend + model servisleme odaklı CV.",
     suggestedRole: "Backend AI Engineer",
   },
 };
+
+function getApplicationMode() {
+  const checked = document.querySelector('input[name="applicationMode"]:checked');
+  return checked ? checked.value : "url";
+}
+
+function hide(el) {
+  if (!el) return;
+  el.classList.add("hidden");
+  el.classList.remove("flex");
+}
+
+function show(el) {
+  if (!el) return;
+  el.classList.remove("hidden");
+}
+
+function showFlex(el) {
+  if (!el) return;
+  el.classList.remove("hidden");
+  el.classList.add("flex");
+}
+
+function setError(msg) {
+  $("errorText").textContent = msg;
+  showFlex($("errorBanner"));
+}
+
+function clearError() {
+  hide($("errorBanner"));
+}
+
+function setSuccess(visible) {
+  if (visible) {
+    showFlex($("successBanner"));
+  } else {
+    hide($("successBanner"));
+  }
+}
+
+function setSuccessText(message) {
+  $("successText").textContent = message;
+}
+
+function setLoading(loading) {
+  const sk = $("emailSkeleton");
+  const body = $("emailBody");
+
+  if (loading) {
+    show(sk);
+    body.classList.add("hidden");
+  } else {
+    hide(sk);
+    body.classList.remove("hidden");
+  }
+}
+
+function updatePreview(subject, body) {
+  $("emailSubject").textContent = subject || "—";
+  $("emailBody").textContent = body || "";
+}
+
+function resetContactEmail() {
+  $("contactEmail").textContent = "Bilinmiyor";
+  if ($("contactEmailInput")) {
+    $("contactEmailInput").value = "";
+  }
+}
+
+function setContactEmail(email) {
+  const normalized = (email || "").trim();
+  $("contactEmail").textContent = normalized || "Bilinmiyor";
+  if ($("contactEmailInput")) {
+    $("contactEmailInput").value = normalized;
+  }
+}
+
+function setSendState(enabled) {
+  canSendApplication = enabled;
+  $("btnSend").disabled = !enabled;
+}
+
+function isValidEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+function showContactEmailEditor(visible) {
+  const editor = $("contactEmailEditor");
+  if (!editor) return;
+  editor.classList.toggle("hidden", !visible);
+}
+
+async function saveContactEmail() {
+  clearError();
+
+  if (!currentCompanyId) {
+    setError("Önce şirket seçin veya e-posta oluşturun.");
+    return;
+  }
+
+  const input = $("contactEmailInput");
+  const value = (input?.value || "").trim();
+
+  if (!isValidEmail(value)) {
+    setError("Geçerli bir e-posta girin.");
+    return;
+  }
+
+  const btn = $("btnSaveContactEmail");
+  if (btn) btn.disabled = true;
+
+  try {
+    const res = await fetch(`/companies/${currentCompanyId}/contact-email`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ contact_email: value }),
+    });
+
+    if (!res.ok) {
+      throw new Error(await parseErrorDetail(res));
+    }
+
+    const data = await res.json();
+    setContactEmail(data.contact_email || value);
+    setSendState(true);
+    setSuccessText("İletişim e-postası güncellendi.");
+    setSuccess(true);
+    showContactEmailEditor(false);
+  } catch (e) {
+    setError(e.message || "İletişim e-postası güncellenemedi.");
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+function setupContactEmailEditor() {
+  if ($("btnEditContactEmail")) {
+    $("btnEditContactEmail").addEventListener("click", () => {
+      showContactEmailEditor(true);
+      const input = $("contactEmailInput");
+      if (input) input.focus();
+    });
+  }
+
+  if ($("btnCancelContactEmail")) {
+    $("btnCancelContactEmail").addEventListener("click", () => {
+      showContactEmailEditor(false);
+      const current = $("contactEmail")?.textContent || "";
+      $("contactEmailInput").value = current === "Bilinmiyor" ? "" : current;
+    });
+  }
+
+  if ($("btnSaveContactEmail")) {
+    $("btnSaveContactEmail").addEventListener("click", async () => {
+      await saveContactEmail();
+    });
+  }
+}
+
+async function parseErrorDetail(res) {
+  try {
+    const data = await res.json();
+
+    if (data.detail) {
+      if (typeof data.detail === "string") return data.detail;
+
+      if (Array.isArray(data.detail)) {
+        return data.detail.map((d) => d.msg || JSON.stringify(d)).join(" ");
+      }
+    }
+  } catch {}
+
+  return res.statusText || `HTTP ${res.status}`;
+}
+
+async function fetchCompanies() {
+  const res = await fetch("/companies/");
+
+  if (!res.ok) {
+    throw new Error("Şirketler alınamadı.");
+  }
+
+  const data = await res.json();
+  const raw = Array.isArray(data) ? data : [];
+  const seen = new Set();
+
+  return raw.filter((company) => {
+    const emailKey = (company.contact_email || "").trim().toLowerCase();
+    const fallbackKey = (company.website || company.id || "").trim().toLowerCase();
+    const key = emailKey || fallbackKey;
+
+    if (!key) return true;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+function renderCompanyList(list) {
+  const companyList = $("companyList");
+
+  if (!companyList) return;
+
+  companyList.innerHTML = "";
+
+  if (!list.length) {
+    companyList.innerHTML = `
+      <div class="p-md text-body-sm text-slate-500">
+        Şirket bulunamadı.
+      </div>
+    `;
+    return;
+  }
+
+  list.forEach((company) => {
+    const item = document.createElement("button");
+    item.type = "button";
+    item.className =
+      "w-full text-left p-md hover:bg-surface-container-low transition-all";
+
+    item.innerHTML = `
+      <p class="font-semibold text-on-surface">
+        ${company.name || "İsimsiz Şirket"}
+      </p>
+      <p class="text-body-sm text-slate-500">
+        ${company.website || ""}
+      </p>
+      <p class="text-body-sm text-slate-500">
+        ${company.contact_email || "Mail bulunamadı"}
+      </p>
+    `;
+
+    item.addEventListener("click", () => {
+      $("selectedCompanyId").value = company.id;
+      currentCompanyId = company.id;
+      $("selectedCompanyText").textContent = `Seçili şirket: ${
+        company.name || company.website || company.id
+      }`;
+      setContactEmail(company.contact_email);
+    });
+
+    companyList.appendChild(item);
+  });
+}
+
+async function loadCompanies() {
+  const companyList = $("companyList");
+
+  try {
+    companyList.innerHTML = `
+      <div class="p-md text-body-sm text-slate-500">
+        Şirketler yükleniyor...
+      </div>
+    `;
+
+    companies = await fetchCompanies();
+    renderCompanyList(companies);
+  } catch (e) {
+    companyList.innerHTML = `
+      <div class="p-md text-body-sm text-red-600">
+        Şirketler yüklenirken hata oluştu.
+      </div>
+    `;
+  }
+}
+
+function setupApplicationMode() {
+  const modeInputs = document.querySelectorAll('input[name="applicationMode"]');
+
+  modeInputs.forEach((input) => {
+    input.addEventListener("change", async () => {
+      const mode = getApplicationMode();
+
+      if (mode === "url") {
+        show($("urlInputWrapper"));
+        hide($("companySelectWrapper"));
+        $("selectedCompanyId").value = "";
+        currentCompanyId = null;
+        $("selectedCompanyText").textContent = "Henüz şirket seçilmedi.";
+        resetContactEmail();
+      } else {
+        hide($("urlInputWrapper"));
+        show($("companySelectWrapper"));
+        await loadCompanies();
+      }
+    });
+  });
+
+  if ($("companySearch")) {
+    $("companySearch").addEventListener("input", () => {
+      const term = $("companySearch").value.toLowerCase().trim();
+
+      const filtered = companies.filter((company) => {
+        return (
+          company.name?.toLowerCase().includes(term) ||
+          company.website?.toLowerCase().includes(term) ||
+          company.contact_email?.toLowerCase().includes(term)
+        );
+      });
+
+      renderCompanyList(filtered);
+    });
+  }
+}
 
 function readApplications() {
   try {
@@ -31,6 +339,7 @@ function saveApplications(items) {
 
 function upsertApplicationRecord(patch) {
   if (!patch?.id) return;
+
   const items = readApplications();
   const idx = items.findIndex((item) => item.id === patch.id);
   const now = new Date().toISOString();
@@ -39,6 +348,7 @@ function upsertApplicationRecord(patch) {
     items.unshift({
       id: patch.id,
       companyUrl: patch.companyUrl || "",
+      companyName: patch.companyName || "",
       role: patch.role || "",
       language: patch.language || "tr",
       cvKey: patch.cvKey || "ai_engineer",
@@ -59,38 +369,41 @@ function upsertApplicationRecord(patch) {
       updatedAt: now,
     };
   }
+
   saveApplications(items);
   renderApplicationsList();
 }
 
-async function fetchCompanies() {
-  const res = await fetch("/companies/");
-  if (!res.ok) throw new Error("companies endpoint");
-  const data = await res.json();
-  return Array.isArray(data) ? data : [];
-}
-
 function formatDate(iso) {
   if (!iso) return "-";
+
   const d = new Date(iso);
+
   if (Number.isNaN(d.getTime())) return "-";
-  return new Intl.DateTimeFormat("tr-TR", { dateStyle: "short", timeStyle: "short" }).format(d);
+
+  return new Intl.DateTimeFormat("tr-TR", {
+    dateStyle: "short",
+    timeStyle: "short",
+  }).format(d);
 }
 
 function renderStats(items) {
+  if (!$("statTotal") || !$("statDraft") || !$("statSent")) return;
+
   $("statTotal").textContent = String(items.length);
   $("statDraft").textContent = String(items.filter((x) => x.status !== "sent").length);
   $("statSent").textContent = String(items.filter((x) => x.status === "sent").length);
 }
 
 function mapCompanyToRecord(c) {
-  const companyName = c.name || "Sirket";
-  const subject = `${companyName} icin basvuru`;
+  const companyName = c.name || "Şirket";
+
   return {
     id: c.id,
-    role: c.name || "Pozisyon belirtilmedi",
+    role: "Pozisyon belirtilmedi",
     companyUrl: c.website || c.source_url || "-",
-    subject,
+    companyName,
+    subject: `${companyName} için kayıtlı şirket`,
     body: c.ai_summary || c.description || "",
     cvLabel: "-",
     contactEmail: c.contact_email || "Bilinmiyor",
@@ -102,38 +415,43 @@ function mapCompanyToRecord(c) {
 function cardHtml(item) {
   const badge =
     item.status === "sent"
-      ? '<span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-700 border border-green-200">Gonderildi</span>'
+      ? '<span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-700 border border-green-200">Gönderildi</span>'
       : '<span class="px-2 py-1 text-xs rounded-full bg-amber-100 text-amber-700 border border-amber-200">Taslak</span>';
 
   const detailId = `detail-${item.id}`;
+
   const detailBody = item.body
     ? item.body
-    : "Bu kayit backendde company endpointinden geldigi icin e-posta govdesi bulunmuyor.";
+    : "Bu kayıtta e-posta gövdesi bulunmuyor.";
 
   return `
     <article class="bg-white border border-outline-variant rounded-lg p-md">
       <div class="flex items-start justify-between gap-sm">
         <div class="min-w-0">
-          <div class="flex items-center gap-xs mb-xs">${badge}<span class="text-label-sm text-slate-500">ID: ${item.id}</span></div>
+          <div class="flex items-center gap-xs mb-xs">
+            ${badge}
+            <span class="text-label-sm text-slate-500">ID: ${item.id}</span>
+          </div>
           <p class="text-body-md font-semibold text-on-surface truncate">${item.subject || "-"}</p>
-          <p class="text-body-sm text-on-surface-variant truncate">Sirket: ${item.companyUrl || "-"}</p>
+          <p class="text-body-sm text-on-surface-variant truncate">Şirket: ${item.companyName || item.companyUrl || "-"}</p>
           <p class="text-body-sm text-on-surface-variant truncate">Pozisyon: ${item.role || "-"}</p>
         </div>
         <div class="text-right text-body-sm text-on-surface-variant">
           <p>CV: ${item.cvLabel || "-"}</p>
-          <p>Iletisim: ${item.contactEmail || "Bilinmiyor"}</p>
+          <p>İletişim: ${item.contactEmail || "Bilinmiyor"}</p>
           <p>${formatDate(item.updatedAt)}</p>
           <button
             type="button"
             data-detail-target="${detailId}"
             class="mt-xs px-sm py-xs text-label-sm rounded-md border border-outline-variant hover:bg-surface-container transition-all"
           >
-            Icerige Gir
+            İçeriğe Gir
           </button>
         </div>
       </div>
+
       <div id="${detailId}" class="hidden mt-sm pt-sm border-t border-outline-variant">
-        <p class="text-label-sm text-slate-500 mb-xs">E-posta Icerigi</p>
+        <p class="text-label-sm text-slate-500 mb-xs">E-posta İçeriği</p>
         <div class="text-body-sm text-on-surface whitespace-pre-wrap leading-relaxed bg-surface-container-low p-sm rounded-md border border-outline-variant">
 ${detailBody}
         </div>
@@ -145,24 +463,27 @@ ${detailBody}
 async function renderApplicationsList() {
   const listEl = $("applicationsList");
   const emptyEl = $("applicationsEmpty");
-  if (!listEl || !emptyEl || !$("statTotal") || !$("statDraft") || !$("statSent")) {
-    return;
-  }
+
+  if (!listEl || !emptyEl) return;
+
   const local = readApplications();
   let combined = [...local];
 
   try {
-    const companies = await fetchCompanies();
+    const companiesData = await fetchCompanies();
     const map = new Map();
-    [...local, ...companies.map(mapCompanyToRecord)].forEach((item) => {
+
+    [...local, ...companiesData.map(mapCompanyToRecord)].forEach((item) => {
       if (!map.has(item.id)) map.set(item.id, item);
     });
-    combined = Array.from(map.values());
-  } catch {
-    // local verilerle devam
-  }
 
-  combined.sort((a, b) => new Date(b.updatedAt || 0).getTime() - new Date(a.updatedAt || 0).getTime());
+    combined = Array.from(map.values());
+  } catch {}
+
+  combined.sort((a, b) => {
+    return new Date(b.updatedAt || 0).getTime() - new Date(a.updatedAt || 0).getTime();
+  });
+
   renderStats(combined);
 
   if (!combined.length) {
@@ -170,107 +491,45 @@ async function renderApplicationsList() {
     emptyEl.classList.remove("hidden");
     return;
   }
+
   emptyEl.classList.add("hidden");
   listEl.innerHTML = combined.map(cardHtml).join("");
+
   listEl.querySelectorAll("[data-detail-target]").forEach((btn) => {
     btn.addEventListener("click", () => {
       const targetId = btn.getAttribute("data-detail-target");
       const panel = document.getElementById(targetId);
+
       if (!panel) return;
+
       panel.classList.toggle("hidden");
-      btn.textContent = panel.classList.contains("hidden") ? "Icerige Gir" : "Icerigi Gizle";
+      btn.textContent = panel.classList.contains("hidden")
+        ? "İçeriğe Gir"
+        : "İçeriği Gizle";
     });
   });
 }
 
-function hide(el) {
-  el.classList.add("hidden");
-  el.classList.remove("flex");
-}
-
-function showFlex(el) {
-  el.classList.remove("hidden");
-  el.classList.add("flex");
-}
-
-function setError(msg) {
-  const banner = $("errorBanner");
-  $("errorText").textContent = msg;
-  showFlex(banner);
-}
-
-function clearError() {
-  hide($("errorBanner"));
-}
-
-function setSuccess(visible) {
-  const banner = $("successBanner");
-  if (visible) {
-    banner.classList.remove("hidden");
-    banner.classList.add("flex");
-  } else {
-    hide(banner);
-  }
-}
-
-function setSuccessText(message) {
-  $("successText").textContent = message;
-}
-
-async function parseErrorDetail(res) {
-  try {
-    const data = await res.json();
-    if (data.detail) {
-      if (typeof data.detail === "string") return data.detail;
-      if (Array.isArray(data.detail)) {
-        return data.detail.map((d) => d.msg || JSON.stringify(d)).join(" ");
-      }
-    }
-  } catch {
-    /* ignore */
-  }
-  return res.statusText || `HTTP ${res.status}`;
-}
-
-function setLoading(loading) {
-  const sk = $("emailSkeleton");
-  const body = $("emailBody");
-  if (loading) {
-    sk.classList.remove("hidden");
-    body.classList.add("hidden");
-  } else {
-    sk.classList.add("hidden");
-    body.classList.remove("hidden");
-  }
-}
-
-function updatePreview(subject, body) {
-  $("emailSubject").textContent = subject || "—";
-  $("emailBody").textContent = body || "";
-}
-
-function resetContactEmail() {
-  $("contactEmail").textContent = "Bilinmiyor";
-}
-
-function setContactEmail(email) {
-  $("contactEmail").textContent = email || "Bilinmiyor";
-}
-
-function setSendState(enabled) {
-  canSendApplication = enabled;
-  $("btnSend").disabled = !enabled;
-}
-
 function getCvKeyFromRole(role) {
   const lower = role.toLowerCase();
+
   if (lower.includes("backend")) return "backend_ai_engineer";
-  if (lower.includes("ai") || lower.includes("ml") || lower.includes("machine learning")) return "ai_engineer";
+
+  if (
+    lower.includes("ai") ||
+    lower.includes("ml") ||
+    lower.includes("machine learning") ||
+    lower.includes("yapay zeka")
+  ) {
+    return "ai_engineer";
+  }
+
   return "ai_engineer";
 }
 
 function syncCvCard(cvKey) {
   const profile = cvProfiles[cvKey] || cvProfiles.ai_engineer;
+
   $("cvSelector").value = cvKey;
   $("selectedCvName").textContent = profile.label;
   $("selectedCvDesc").textContent = profile.desc;
@@ -279,6 +538,7 @@ function syncCvCard(cvKey) {
 function applyCvToRole(cvKey) {
   const profile = cvProfiles[cvKey] || cvProfiles.ai_engineer;
   const roleInput = $("targetRole");
+
   if (!roleInput.value.trim()) {
     roleInput.value = profile.suggestedRole;
   }
@@ -290,13 +550,42 @@ $("btnGenerate").addEventListener("click", async () => {
   resetContactEmail();
   setSendState(false);
 
+  const mode = getApplicationMode();
   const url = $("companyUrl").value.trim();
+  const companyId = $("selectedCompanyId")?.value.trim();
   const role = $("targetRole").value.trim();
   const language = $("language").value;
 
-  if (!url || !role) {
-    setError("Sirket URL ve hedef pozisyon zorunludur.");
+  if (!role) {
+    setError("Hedef pozisyon zorunludur.");
     return;
+  }
+
+  const payload = {
+    role,
+    language,
+  };
+
+  let companyDisplay = "";
+
+  if (mode === "url") {
+    if (!url) {
+      setError("Şirket URL zorunludur.");
+      return;
+    }
+
+    payload.url = url;
+    companyDisplay = url;
+  } else {
+    if (!companyId) {
+      setError("Lütfen kayıtlı bir şirket seçin.");
+      return;
+    }
+
+    payload.company_id = companyId;
+
+    const selectedCompany = companies.find((c) => c.id === companyId);
+    companyDisplay = selectedCompany?.name || selectedCompany?.website || companyId;
   }
 
   const btn = $("btnGenerate");
@@ -307,7 +596,7 @@ $("btnGenerate").addEventListener("click", async () => {
     const res = await fetch("/applications/prepare", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ url, role, language }),
+      body: JSON.stringify(payload),
     });
 
     if (!res.ok) {
@@ -315,12 +604,17 @@ $("btnGenerate").addEventListener("click", async () => {
     }
 
     const data = await res.json();
+
     applicationId = data.application_id;
+    currentCompanyId = data.company_id || (mode === "company" ? companyId : null);
+
     updatePreview(data.subject, data.body);
     setContactEmail(data.contact_email);
+
     upsertApplicationRecord({
       id: data.application_id,
-      companyUrl: url,
+      companyUrl: mode === "url" ? url : "",
+      companyName: companyDisplay,
       role,
       language,
       cvKey: getCvKeyFromRole(role),
@@ -329,20 +623,26 @@ $("btnGenerate").addEventListener("click", async () => {
       body: data.body || "",
       status: "draft",
     });
+
     if (data.contact_email) {
-      setSuccessText("E-posta basariyla olusturuldu");
+      setSuccessText("E-posta başarıyla oluşturuldu.");
       setSendState(true);
+      showContactEmailEditor(false);
     } else {
-      setSuccessText("E-posta olustu ama sirketin iletisim e-postasi bulunamadi");
+      setSuccessText("E-posta oluştu ama şirketin iletişim e-postası bulunamadı. Elle ekleyebilirsin.");
       setSendState(false);
+      showContactEmailEditor(true);
     }
+
+    $("btnRefine").disabled = false;
     setSuccess(true);
   } catch (e) {
     applicationId = null;
     updatePreview("—", "Formu doldurup tekrar deneyin.");
     resetContactEmail();
     setSendState(false);
-    setError(e.message || "Istek basarisiz. Backend calisiyor mu? (uvicorn 8000)");
+    $("btnRefine").disabled = true;
+    setError(e.message || "İstek başarısız. Backend çalışıyor mu?");
   } finally {
     btn.disabled = false;
     setLoading(false);
@@ -356,13 +656,16 @@ $("targetRole").addEventListener("input", (e) => {
 
 $("btnChangeCv").addEventListener("click", () => {
   const current = $("cvSelector").value;
-  const next = current === "ai_engineer" ? "backend_ai_engineer" : "ai_engineer";
+  const next =
+    current === "ai_engineer" ? "backend_ai_engineer" : "ai_engineer";
+
   syncCvCard(next);
   applyCvToRole(next);
 });
 
 $("cvSelector").addEventListener("change", (e) => {
   const cvKey = e.target.value;
+
   syncCvCard(cvKey);
   applyCvToRole(cvKey);
 });
@@ -371,13 +674,14 @@ $("btnRefine").addEventListener("click", async () => {
   clearError();
 
   if (!applicationId) {
-    setError("Once e-posta olusturun.");
+    setError("Önce e-posta oluşturun.");
     return;
   }
 
   const instruction = $("refineInstruction").value.trim();
+
   if (!instruction) {
-    setError("Duzenleme talimati yazin.");
+    setError("Düzenleme talimatı yazın.");
     return;
   }
 
@@ -397,7 +701,9 @@ $("btnRefine").addEventListener("click", async () => {
     }
 
     const data = await res.json();
+
     updatePreview(data.subject, data.body);
+
     upsertApplicationRecord({
       id: applicationId,
       subject: data.subject || "",
@@ -405,10 +711,11 @@ $("btnRefine").addEventListener("click", async () => {
       status: data.status || "draft",
       instruction,
     });
-    setSuccessText("E-posta duzenlendi");
+
+    setSuccessText("E-posta düzenlendi.");
     setSuccess(true);
   } catch (e) {
-    setError(e.message || "Duzenleme basarisiz.");
+    setError(e.message || "Düzenleme başarısız.");
   } finally {
     btn.disabled = false;
     setLoading(false);
@@ -419,12 +726,12 @@ $("btnSend").addEventListener("click", async () => {
   clearError();
 
   if (!applicationId) {
-    setError("Once e-posta olusturun.");
+    setError("Önce e-posta oluşturun.");
     return;
   }
 
   if (!canSendApplication) {
-    setError("Gonderim icin hedef iletisim e-postasi bulunmuyor.");
+    setError("Gönderim için hedef iletişim e-postası bulunmuyor.");
     return;
   }
 
@@ -442,24 +749,31 @@ $("btnSend").addEventListener("click", async () => {
     }
 
     const data = await res.json();
+
     upsertApplicationRecord({
       id: applicationId,
       status: data.status || "sent",
     });
-    setSuccessText(data.message || "Basvuru basariyla gonderildi.");
+
+    setSuccessText(data.message || "Başvuru başarıyla gönderildi.");
     setSuccess(true);
     clearError();
-    alert(data.message || "Gonderildi.");
+    alert(data.message || "Gönderildi.");
   } catch (e) {
-    setError(e.message || "Gonderim basarisiz.");
+    setError(e.message || "Gönderim başarısız.");
   } finally {
     btn.disabled = false;
   }
 });
 
+setupApplicationMode();
+setupContactEmailEditor();
 syncCvCard("ai_engineer");
+
 if ($("btnRefreshApplications")) {
   $("btnRefreshApplications").addEventListener("click", () => {
     renderApplicationsList();
   });
 }
+
+renderApplicationsList();

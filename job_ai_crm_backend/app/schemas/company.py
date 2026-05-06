@@ -37,3 +37,12 @@ class CompanyResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class CompanyContactEmailUpdateRequest(BaseModel):
+    contact_email: str
+
+
+class CompanyContactEmailUpdateResponse(BaseModel):
+    company_id: UUID
+    contact_email: str

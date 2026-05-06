@@ -3,77 +3,58 @@
   <head>
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-    <title>JobAI - Yapay Zeka Basvuru Asistani</title>
+    <title>JobAI - Yapay Zeka Başvuru Asistanı</title>
+
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
+
     <link
       href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
       rel="stylesheet"
     />
+
     <style>
       body {
         font-family: "Inter", sans-serif;
+        min-height: max(884px, 100dvh);
       }
+
       .material-symbols-outlined {
         font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
       }
     </style>
+
     <script id="tailwind-config">
       tailwind.config = {
         darkMode: "class",
         theme: {
           extend: {
             colors: {
-              "inverse-primary": "#b4c5ff",
-              "surface-tint": "#0053db",
               primary: "#004ac6",
-              "on-tertiary-fixed": "#25005a",
-              "on-secondary-fixed-variant": "#3f465c",
-              "on-tertiary-container": "#f7edff",
-              "surface-container-high": "#dce9ff",
-              error: "#ba1a1a",
-              "tertiary-fixed-dim": "#d2bbff",
-              outline: "#737686",
-              tertiary: "#6a1edb",
-              "surface-container-low": "#eff4ff",
-              "on-primary": "#ffffff",
+              "surface-tint": "#0053db",
               background: "#f8f9ff",
-              "on-tertiary": "#ffffff",
-              "surface-container-highest": "#d3e4fe",
-              "on-secondary-fixed": "#131b2e",
-              "tertiary-container": "#8343f4",
               surface: "#f8f9ff",
-              secondary: "#565e74",
-              "on-secondary-container": "#5c647a",
-              "on-primary-fixed": "#00174b",
-              "on-surface": "#0b1c30",
-              "primary-fixed-dim": "#b4c5ff",
-              "surface-variant": "#d3e4fe",
-              "on-primary-container": "#eeefff",
-              "surface-container": "#e5eeff",
-              "surface-bright": "#f8f9ff",
-              "primary-container": "#2563eb",
-              "on-error": "#ffffff",
-              "on-secondary": "#ffffff",
-              "outline-variant": "#c3c6d7",
-              "secondary-fixed": "#dae2fd",
               "on-background": "#0b1c30",
-              "on-tertiary-fixed-variant": "#5a00c6",
-              "inverse-on-surface": "#eaf1ff",
-              "primary-fixed": "#dbe1ff",
-              "on-primary-fixed-variant": "#003ea8",
-              "tertiary-fixed": "#eaddff",
-              "surface-dim": "#cbdbf5",
-              "error-container": "#ffdad6",
+              "on-surface": "#0b1c30",
+              "on-primary": "#ffffff",
               "surface-container-lowest": "#ffffff",
-              "secondary-container": "#dae2fd",
-              "secondary-fixed-dim": "#bec6e0",
-              "on-surface-variant": "#434655",
-              "inverse-surface": "#213145",
-              "on-error-container": "#93000a",
+              "surface-container-low": "#eff4ff",
+              "surface-container": "#e5eeff",
+              "surface-container-high": "#dce9ff",
+              "surface-container-highest": "#d3e4fe",
+              "outline-variant": "#c3c6d7",
+              outline: "#737686",
+              secondary: "#565e74",
+              "on-secondary": "#ffffff",
+              tertiary: "#6a1edb",
+              "on-tertiary": "#ffffff",
+              "tertiary-container": "#8343f4",
+              "on-tertiary-fixed-variant": "#5a00c6",
+              error: "#ba1a1a",
             },
             borderRadius: {
               DEFAULT: "0.125rem",
@@ -82,72 +63,60 @@
               full: "0.75rem",
             },
             spacing: {
-              sm: "8px",
-              "container-max": "1280px",
               xs: "4px",
-              xl: "32px",
-              unit: "8px",
-              lg: "24px",
+              sm: "8px",
               md: "16px",
+              lg: "24px",
+              xl: "32px",
               xxl: "48px",
               gutter: "24px",
             },
-            fontFamily: {
-              h2: ["Inter"],
-              display: ["Inter"],
-              "body-sm": ["Inter"],
-              h1: ["Inter"],
-              "label-md": ["Inter"],
-              "body-lg": ["Inter"],
-              "body-md": ["Inter"],
-              "label-sm": ["Inter"],
-              h3: ["Inter"],
-            },
             fontSize: {
-              h2: ["24px", { lineHeight: "1.3", letterSpacing: "-0.01em", fontWeight: "600" }],
-              display: ["48px", { lineHeight: "1.1", letterSpacing: "-0.02em", fontWeight: "700" }],
-              "body-sm": ["14px", { lineHeight: "1.5", letterSpacing: "0", fontWeight: "400" }],
-              h1: ["32px", { lineHeight: "1.2", letterSpacing: "-0.02em", fontWeight: "600" }],
-              "label-md": ["14px", { lineHeight: "1", letterSpacing: "0.01em", fontWeight: "500" }],
-              "body-lg": ["18px", { lineHeight: "1.6", letterSpacing: "0", fontWeight: "400" }],
-              "body-md": ["16px", { lineHeight: "1.5", letterSpacing: "0", fontWeight: "400" }],
-              "label-sm": ["12px", { lineHeight: "1", letterSpacing: "0.02em", fontWeight: "600" }],
-              h3: ["20px", { lineHeight: "1.4", letterSpacing: "-0.01em", fontWeight: "600" }],
+              h2: ["24px", { lineHeight: "1.3", fontWeight: "600" }],
+              h3: ["20px", { lineHeight: "1.4", fontWeight: "600" }],
+              "body-md": ["16px", { lineHeight: "1.5", fontWeight: "400" }],
+              "body-sm": ["14px", { lineHeight: "1.5", fontWeight: "400" }],
+              "label-md": ["14px", { lineHeight: "1", fontWeight: "500" }],
+              "label-sm": ["12px", { lineHeight: "1", fontWeight: "600" }],
             },
           },
         },
       };
     </script>
-    <style>
-      body {
-        min-height: max(884px, 100dvh);
-      }
-    </style>
   </head>
+
   <body class="bg-background text-on-background min-h-screen flex flex-col">
     <header
-      class="fixed top-0 w-full z-50 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-none"
+      class="fixed top-0 w-full z-50 bg-white border-b border-slate-200 shadow-sm"
     >
       <div class="flex items-center justify-between px-6 h-16 max-w-7xl mx-auto">
         <div class="flex items-center gap-2">
           <span
-            class="material-symbols-outlined text-blue-600 dark:text-blue-400"
+            class="material-symbols-outlined text-blue-600"
             style="font-variation-settings: 'FILL' 1"
-            >smart_toy</span
           >
-          <span class="text-xl font-bold tracking-tight text-blue-600 dark:text-blue-400">JobAI</span>
+            smart_toy
+          </span>
+          <span class="text-xl font-bold tracking-tight text-blue-600">
+            JobAI
+          </span>
         </div>
+
         <div class="flex items-center gap-md">
           <a
             href="./applications.html"
-            class="px-md py-xs text-sm font-medium rounded-lg border border-outline-variant text-on-surface-variant hover:bg-surface-container transition-all"
-            >Başvurular</a
+            class="px-md py-xs text-sm font-medium rounded-lg border border-outline-variant text-on-surface hover:bg-surface-container transition-all"
           >
+            Başvurular
+          </a>
+
           <a
             href="./companies.html"
-            class="px-md py-xs text-sm font-medium rounded-lg border border-outline-variant text-on-surface-variant hover:bg-surface-container transition-all"
-            >Şirketler</a
+            class="px-md py-xs text-sm font-medium rounded-lg border border-outline-variant text-on-surface hover:bg-surface-container transition-all"
           >
+            Şirketler
+          </a>
+
           <div
             class="w-14 h-14 rounded-full bg-surface-container-highest flex items-center justify-center overflow-hidden border border-outline-variant"
           >
@@ -168,15 +137,54 @@
             <div class="flex items-center gap-sm mb-lg">
               <span
                 class="bg-primary text-on-primary w-6 h-6 rounded-full flex items-center justify-center text-label-sm"
-                >1</span
               >
-              <h2 class="font-h2 text-h2 text-on-surface">Basvuru Detaylari</h2>
+                1
+              </span>
+              <h2 class="text-h2 text-on-surface">Başvuru Detayları</h2>
             </div>
+
             <div class="space-y-md">
               <div>
-                <label class="block font-label-md text-label-md text-on-surface-variant mb-xs" for="companyUrl"
-                  >Sirket Kariyer URL</label
+                <p class="block text-label-md text-on-surface mb-sm">
+                  Başvuru Yöntemi
+                </p>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-sm">
+                  <label
+                    class="flex items-center gap-sm p-md rounded-lg border border-outline-variant bg-white cursor-pointer hover:bg-surface-container-low transition-all"
+                  >
+                    <input
+                      type="radio"
+                      name="applicationMode"
+                      value="url"
+                      checked
+                      class="text-primary focus:ring-primary"
+                    />
+                    <span class="text-body-sm font-medium">URL ile yeni şirket</span>
+                  </label>
+
+                  <label
+                    class="flex items-center gap-sm p-md rounded-lg border border-outline-variant bg-white cursor-pointer hover:bg-surface-container-low transition-all"
+                  >
+                    <input
+                      type="radio"
+                      name="applicationMode"
+                      value="company"
+                      class="text-primary focus:ring-primary"
+                    />
+                    <span class="text-body-sm font-medium">Kayıtlı şirket seç</span>
+                  </label>
+                </div>
+              </div>
+
+              <div id="urlInputWrapper">
+                <label
+                  class="block text-label-md text-on-surface mb-xs"
+                  for="companyUrl"
                 >
+                  Şirket / Kariyer URL
+                </label>
+
                 <input
                   id="companyUrl"
                   class="w-full px-md py-sm bg-white border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all text-body-md"
@@ -184,35 +192,77 @@
                   type="url"
                 />
               </div>
-              <div>
-                <label class="block font-label-md text-label-md text-on-surface-variant mb-xs" for="targetRole"
-                  >Hedef Pozisyon</label
+
+              <div id="companySelectWrapper" class="hidden space-y-sm">
+                <label
+                  class="block text-label-md text-on-surface mb-xs"
+                  for="companySearch"
                 >
+                  Kayıtlı Şirket Ara
+                </label>
+
+                <input
+                  id="companySearch"
+                  class="w-full px-md py-sm bg-white border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all text-body-md"
+                  placeholder="Şirket adı yazın..."
+                  type="text"
+                />
+
+                <div
+                  id="companyList"
+                  class="max-h-56 overflow-y-auto bg-white border border-outline-variant rounded-lg divide-y divide-outline-variant"
+                >
+                  <div class="p-md text-body-sm text-slate-500">
+                    Şirketler yükleniyor...
+                  </div>
+                </div>
+
+                <input id="selectedCompanyId" type="hidden" />
+
+                <p id="selectedCompanyText" class="text-label-sm text-slate-500">
+                  Henüz şirket seçilmedi.
+                </p>
+              </div>
+
+              <div>
+                <label
+                  class="block text-label-md text-on-surface mb-xs"
+                  for="targetRole"
+                >
+                  Hedef Pozisyon
+                </label>
+
                 <input
                   id="targetRole"
                   class="w-full px-md py-sm bg-white border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all text-body-md"
-                  placeholder="Orn: Backend AI Engineer"
+                  placeholder="Örn: Backend AI Engineer"
                   type="text"
                 />
               </div>
+
               <div>
-                <label class="block font-label-md text-label-md text-on-surface-variant mb-xs" for="language"
-                  >Dil</label
+                <label
+                  class="block text-label-md text-on-surface mb-xs"
+                  for="language"
                 >
+                  Dil
+                </label>
+
                 <select
                   id="language"
                   class="w-full px-md py-sm bg-white border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all text-body-md"
                 >
-                  <option value="tr">Turkce</option>
+                  <option value="tr">Türkçe</option>
                   <option value="en">English</option>
                 </select>
               </div>
+
               <button
                 type="button"
                 id="btnGenerate"
-                class="w-full bg-primary text-on-primary font-label-md py-md rounded-lg hover:bg-surface-tint active:scale-95 duration-150 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:pointer-events-none"
+                class="w-full bg-primary text-on-primary font-medium py-md rounded-lg hover:bg-surface-tint active:scale-95 duration-150 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:pointer-events-none"
               >
-                <span>E-posta Olustur</span>
+                <span>E-posta Oluştur</span>
                 <span class="material-symbols-outlined text-lg">auto_awesome</span>
               </button>
             </div>
@@ -222,37 +272,46 @@
             <div class="flex items-center gap-sm mb-lg">
               <span
                 class="bg-tertiary text-on-tertiary w-6 h-6 rounded-full flex items-center justify-center text-label-sm"
-                >2</span
               >
-              <h2 class="font-h2 text-h2 text-on-surface">Gonderilecek CV</h2>
+                2
+              </span>
+              <h2 class="text-h2 text-on-surface">Gönderilecek CV</h2>
             </div>
+
             <div class="space-y-md">
               <div class="bg-surface-container p-md rounded-lg border border-outline-variant">
-                <p class="text-label-sm text-slate-500 mb-xs">Secili CV</p>
-                <p id="selectedCvName" class="text-body-md font-semibold text-on-surface">AI Engineer CV</p>
-                <p id="selectedCvDesc" class="text-body-sm text-on-surface-variant mt-xs">
-                  Genel AI rollerine uygun varsayilan CV.
+                <p class="text-label-sm text-slate-500 mb-xs">Seçili CV</p>
+
+                <p id="selectedCvName" class="text-body-md font-semibold text-on-surface">
+                  AI Engineer CV
+                </p>
+
+                <p id="selectedCvDesc" class="text-body-sm text-on-surface mt-xs">
+                  Genel AI rollerine uygun varsayılan CV.
                 </p>
               </div>
+
               <div class="flex items-center gap-sm">
                 <select
                   id="cvSelector"
-                  aria-label="Gonderilecek CV secimi"
+                  aria-label="Gönderilecek CV seçimi"
                   class="flex-1 px-md py-sm bg-white border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all text-body-md"
                 >
                   <option value="ai_engineer">AI Engineer CV</option>
                   <option value="backend_ai_engineer">Backend AI Engineer CV</option>
                 </select>
+
                 <button
                   type="button"
                   id="btnChangeCv"
-                  class="px-lg py-sm bg-white border border-outline text-on-surface-variant font-label-md rounded-lg hover:bg-slate-50 active:scale-95 duration-150 transition-all"
+                  class="px-lg py-sm bg-white border border-outline text-on-surface font-medium rounded-lg hover:bg-slate-50 active:scale-95 duration-150 transition-all"
                 >
-                  Degistir
+                  Değiştir
                 </button>
               </div>
+
               <p class="text-label-sm text-slate-500">
-                Not: Backend tarafi CV'yi role gore otomatik secer. Bu alan role'i hizli degistirir.
+                Not: Backend tarafı CV'yi role göre otomatik seçer. Bu alan frontend önizlemesi içindir.
               </p>
             </div>
           </section>
@@ -262,41 +321,50 @@
             class="hidden bg-green-50 border border-green-200 text-green-800 p-md rounded-lg flex items-center gap-sm"
           >
             <span class="material-symbols-outlined text-green-600">check_circle</span>
-            <span id="successText" class="font-label-md">E-posta basariyla olusturuldu</span>
+            <span id="successText" class="font-medium">E-posta başarıyla oluşturuldu</span>
           </div>
+
           <div
             id="errorBanner"
             class="hidden bg-red-50 border border-red-200 text-red-800 p-md rounded-lg flex items-start gap-sm"
           >
             <span class="material-symbols-outlined text-red-600 shrink-0">error</span>
-            <span id="errorText" class="font-label-md text-sm"></span>
+            <span id="errorText" class="font-medium text-sm"></span>
           </div>
 
           <section class="bg-surface-container-lowest p-xl rounded-xl border border-outline-variant shadow-sm">
             <div class="flex items-center gap-sm mb-lg">
               <span
                 class="bg-secondary text-on-secondary w-6 h-6 rounded-full flex items-center justify-center text-label-sm"
-                >3</span
               >
-              <h2 class="font-h2 text-h2 text-on-surface">Duzenle</h2>
+                3
+              </span>
+              <h2 class="text-h2 text-on-surface">Düzenle</h2>
             </div>
+
             <div class="space-y-md">
-              <label class="block font-label-md text-label-md text-on-surface-variant mb-xs" for="refineInstruction"
-                >Duzenleme Talimati</label
+              <label
+                class="block text-label-md text-on-surface mb-xs"
+                for="refineInstruction"
               >
+                Düzenleme Talimatı
+              </label>
+
               <textarea
                 id="refineInstruction"
                 class="w-full px-md py-sm bg-white border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all text-body-md"
-                placeholder="Orn: Daha dogal yap, PyTorch deneyimimi ekle"
+                placeholder="Örn: Daha doğal yap, backend ve yapay zeka tarafını birlikte vurgula."
                 rows="3"
               ></textarea>
+
               <button
                 type="button"
                 id="btnRefine"
-                class="w-full bg-white border border-outline text-on-surface-variant font-label-md py-md rounded-lg hover:bg-slate-50 active:scale-95 duration-150 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:pointer-events-none"
+                disabled
+                class="w-full bg-white border border-outline text-on-surface font-medium py-md rounded-lg hover:bg-slate-50 active:scale-95 duration-150 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:pointer-events-none"
               >
                 <span class="material-symbols-outlined text-lg">refresh</span>
-                <span>E-postayi Guncelle</span>
+                <span>E-postayı Güncelle</span>
               </button>
             </div>
           </section>
@@ -311,93 +379,142 @@
             >
               <div class="flex items-center gap-sm">
                 <span
-                class="bg-tertiary text-on-tertiary w-6 h-6 rounded-full flex items-center justify-center text-label-sm"
-                  >3</span
+                  class="bg-tertiary text-on-tertiary w-6 h-6 rounded-full flex items-center justify-center text-label-sm"
                 >
-                <h2 class="font-h2 text-h2 text-on-surface">E-posta Onizleme</h2>
+                  4
+                </span>
+                <h2 class="text-h2 text-on-surface">E-posta Önizleme</h2>
               </div>
+
               <div class="flex gap-xs">
                 <div class="w-3 h-3 rounded-full bg-red-400"></div>
                 <div class="w-3 h-3 rounded-full bg-amber-400"></div>
                 <div class="w-3 h-3 rounded-full bg-green-400"></div>
               </div>
             </div>
+
             <div class="p-xl space-y-lg flex-grow">
               <div class="border-b border-outline-variant pb-md">
                 <div class="flex items-center gap-md flex-wrap">
-                  <span class="text-label-sm text-slate-400 w-16 uppercase tracking-wider shrink-0">Konu:</span>
-                  <span id="emailSubject" class="text-body-md font-semibold text-on-surface"
-                    >—</span
+                  <span class="text-label-sm text-slate-400 w-16 uppercase tracking-wider shrink-0">
+                    Konu:
+                  </span>
+
+                  <span
+                    id="emailSubject"
+                    class="text-body-md font-semibold text-on-surface"
                   >
+                    —
+                  </span>
                 </div>
               </div>
+
               <div id="emailSkeleton" class="hidden animate-pulse space-y-md">
                 <div class="h-4 bg-slate-200 rounded w-3/4"></div>
                 <div class="h-4 bg-slate-200 rounded w-full"></div>
                 <div class="h-4 bg-slate-200 rounded w-5/6"></div>
                 <div class="h-4 bg-slate-200 rounded w-2/3"></div>
               </div>
+
               <div
                 id="emailBody"
                 class="text-body-md text-on-surface space-y-md leading-relaxed whitespace-pre-wrap min-h-[120px]"
               >
-                Formu doldurup &quot;E-posta Olustur&quot; ile baslayin. Onizleme burada gorunur.
+                Formu doldurup "E-posta Oluştur" ile başlayın. Önizleme burada görünür.
               </div>
+
               <div class="pt-sm border-t border-outline-variant">
-                <span class="text-label-sm text-slate-400">Hedef Iletisim:</span>
-                <span id="contactEmail" class="text-body-sm text-on-surface-variant ml-2">Bilinmiyor</span>
+                <span class="text-label-sm text-slate-400">Hedef İletişim:</span>
+                <span id="contactEmail" class="text-body-sm text-on-surface ml-2">
+                  Bilinmiyor
+                </span>
+                <button
+                  type="button"
+                  id="btnEditContactEmail"
+                  class="ml-3 px-sm py-xs text-label-sm rounded-md border border-outline-variant hover:bg-surface-container transition-all"
+                >
+                  Maili Değiştir
+                </button>
+                <div id="contactEmailEditor" class="hidden mt-sm flex items-center gap-sm flex-wrap">
+                  <input
+                    id="contactEmailInput"
+                    type="email"
+                    class="flex-1 min-w-[220px] px-md py-sm bg-white border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all text-body-md"
+                    placeholder="ornek@sirket.com"
+                  />
+                  <button
+                    type="button"
+                    id="btnSaveContactEmail"
+                    class="px-md py-sm bg-primary text-on-primary rounded-lg hover:bg-surface-tint transition-all"
+                  >
+                    Kaydet
+                  </button>
+                  <button
+                    type="button"
+                    id="btnCancelContactEmail"
+                    class="px-md py-sm bg-white border border-outline-variant rounded-lg hover:bg-surface-container-low transition-all"
+                  >
+                    Vazgeç
+                  </button>
+                </div>
               </div>
             </div>
+
             <div
               class="p-md bg-tertiary-container/10 border-t border-outline-variant flex items-center gap-sm"
             >
               <span
                 class="material-symbols-outlined text-tertiary text-lg"
                 style="font-variation-settings: 'FILL' 1"
-                >colors_spark</span
               >
-              <span class="text-label-sm text-on-tertiary-fixed-variant"
-                >ATS uyumlu, AI destekli icerik</span
-              >
+                colors_spark
+              </span>
+              <span class="text-label-sm text-on-tertiary-fixed-variant">
+                ATS uyumlu, AI destekli içerik
+              </span>
             </div>
           </section>
 
-          <section class="bg-white p-xl rounded-xl border-2 border-primary-container shadow-lg">
+          <section class="bg-white p-xl rounded-xl border-2 border-primary shadow-lg">
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-sm mb-lg">
               <div class="flex items-center gap-sm">
                 <span
                   class="bg-primary text-on-primary w-6 h-6 rounded-full flex items-center justify-center text-label-sm"
-                  >5</span
                 >
-                <h2 class="font-h2 text-h2 text-on-surface">Gonderime Hazir mi?</h2>
+                  5
+                </span>
+                <h2 class="text-h2 text-on-surface">Gönderime Hazır mı?</h2>
               </div>
-              <span class="text-label-sm text-slate-500 italic">Gondermeden once son kez kontrol et</span>
+
+              <span class="text-label-sm text-slate-500 italic">
+                Göndermeden önce son kez kontrol et
+              </span>
             </div>
+
             <button
               type="button"
               id="btnSend"
               disabled
-              class="w-full bg-primary text-on-primary font-h3 text-h3 py-xl rounded-xl hover:bg-surface-tint active:scale-95 duration-150 transition-all flex items-center justify-center gap-md group shadow-xl shadow-primary/20 disabled:opacity-50 disabled:pointer-events-none"
+              class="w-full bg-primary text-on-primary text-h3 font-semibold py-xl rounded-xl hover:bg-surface-tint active:scale-95 duration-150 transition-all flex items-center justify-center gap-md group shadow-xl shadow-primary/20 disabled:opacity-50 disabled:pointer-events-none"
             >
-              <span>Basvuruyu Gonder</span>
-              <span class="material-symbols-outlined text-2xl group-hover:translate-x-1 transition-transform"
-                >send</span
-              >
+              <span>Başvuruyu Gönder</span>
+              <span class="material-symbols-outlined text-2xl group-hover:translate-x-1 transition-transform">
+                send
+              </span>
             </button>
           </section>
         </div>
       </div>
-
     </main>
 
     <footer
-      class="w-full py-12 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 mt-auto"
+      class="w-full py-12 border-t border-slate-200 bg-slate-50 mt-auto"
     >
       <div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4">
         <div class="flex flex-col md:flex-row items-center gap-lg">
-          <span class="font-bold text-slate-900 dark:text-white">JobAI</span>
-          <p class="text-sm font-normal text-slate-500 dark:text-slate-400">
-            © 2026 JobAI Assistant. Tum haklari saklidir.
+          <span class="font-bold text-slate-900">JobAI</span>
+          <p class="text-sm font-normal text-slate-500">
+            © 2026 JobAI Assistant. Tüm hakları saklıdır.
           </p>
         </div>
       </div>

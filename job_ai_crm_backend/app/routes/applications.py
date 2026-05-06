@@ -1,6 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 import os
+import re
 
 from app.database import get_db
 from app.models.company import Company
@@ -14,7 +16,9 @@ from app.schemas.application import (
     RefineEmailRequest,
     RefineEmailResponse,
     SendApplicationResponse,
-    SentApplicationsResponse
+    SentApplicationsResponse,
+    UpdateContactEmailRequest,
+    UpdateContactEmailResponse
 )
 
 from app.services.url_analyzer import (
@@ -32,6 +36,29 @@ router = APIRouter(
     prefix="/applications",
     tags=["Applications"]
 )
+
+
+def normalize_email(email: str | None) -> str | None:
+    if not email:
+        return None
+    normalized = email.strip().lower()
+    return normalized or None
+
+
+def get_existing_company_by_email(db: Session, email: str | None):
+    normalized_email = normalize_email(email)
+    if not normalized_email:
+        return None
+    return (
+        db.query(Company)
+        .filter(Company.contact_email.isnot(None))
+        .filter(Company.contact_email.ilike(normalized_email))
+        .first()
+    )
+
+
+def is_valid_email(email: str) -> bool:
+    return bool(re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", email))
 
 
 def choose_cv_role_type(role: str) -> str:
@@ -99,47 +126,72 @@ def prepare_application(
     request: PrepareApplicationRequest,
     db: Session = Depends(get_db)
 ):
-    normalized_url = normalize_url(request.url)
-
-    existing_company = (
-        db.query(Company)
-        .filter(Company.website == normalized_url)
-        .first()
-    )
-
-    if existing_company:
-        company = existing_company
-    else:
-        text = fetch_website_text(request.url)
-
-        if not text:
-            raise HTTPException(
-                status_code=400,
-                detail="Website content could not be fetched"
-            )
-
-        company_data = extract_company_data_from_text(
-            url=request.url,
-            text=text
+    if not request.url and not request.company_id:
+        raise HTTPException(
+            status_code=400,
+            detail="Either url or company_id is required"
         )
 
-        ai_data = analyze_with_ai(text, request.url)
+    if request.company_id:
+        company = (
+            db.query(Company)
+            .filter(Company.id == request.company_id)
+            .first()
+        )
 
-        company_data.update({
-            "name": ai_data.get("name") or company_data["name"],
-            "industry": ai_data.get("industry") or company_data.get("industry"),
-            "country": company_data.get("country") or ai_data.get("country"),
-            "city": company_data.get("city") or ai_data.get("city"),
-            "description": ai_data.get("description") or company_data.get("description"),
-            "ai_summary": ai_data.get("summary") or company_data.get("ai_summary"),
-            "contact_email": company_data.get("contact_email"),
-        })
+        if not company:
+            raise HTTPException(status_code=404, detail="Company not found")
 
-        company = Company(**company_data)
+    else:
+        normalized_url = normalize_url(request.url)
 
-        db.add(company)
-        db.commit()
-        db.refresh(company)
+        existing_company = (
+            db.query(Company)
+            .filter(Company.website == normalized_url)
+            .first()
+        )
+
+        if existing_company:
+            raise HTTPException(status_code=409, detail="Bu şirket zaten kayıtlı")
+        else:
+            text = fetch_website_text(request.url)
+
+            if not text:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Website content could not be fetched"
+                )
+
+            company_data = extract_company_data_from_text(
+                url=request.url,
+                text=text
+            )
+
+            ai_data = analyze_with_ai(text, request.url)
+
+            company_data.update({
+                "name": ai_data.get("name") or company_data["name"],
+                "industry": ai_data.get("industry") or company_data.get("industry"),
+                "country": company_data.get("country") or ai_data.get("country"),
+                "city": company_data.get("city") or ai_data.get("city"),
+                "description": ai_data.get("description") or company_data.get("description"),
+                "ai_summary": ai_data.get("summary") or company_data.get("ai_summary"),
+                "contact_email": company_data.get("contact_email"),
+            })
+
+            existing_by_email = get_existing_company_by_email(
+                db,
+                company_data.get("contact_email")
+            )
+            if existing_by_email:
+                raise HTTPException(status_code=409, detail="Bu şirket zaten kayıtlı")
+
+            company_data["contact_email"] = normalize_email(company_data.get("contact_email"))
+            company = Company(**company_data)
+
+            db.add(company)
+            db.commit()
+            db.refresh(company)
 
     cv_role_type = choose_cv_role_type(request.role)
 
@@ -193,6 +245,7 @@ def prepare_application(
 
     return {
         "application_id": application.id,
+        "company_id": company.id,
         "generated_email_id": generated_email.id,
         "contact_email": company.contact_email,
         "subject": generated_email.subject,
@@ -329,4 +382,48 @@ def send_application(
         "generated_email_id": generated_email.id,
         "status": "sent",
         "message": "Email sent successfully and saved"
+    }
+
+
+@router.post("/{application_id}/contact-email", response_model=UpdateContactEmailResponse)
+def update_application_contact_email(
+    application_id: str,
+    request: UpdateContactEmailRequest,
+    db: Session = Depends(get_db)
+):
+    application = (
+        db.query(Application)
+        .filter(Application.id == application_id)
+        .first()
+    )
+    if not application:
+        raise HTTPException(status_code=404, detail="Application not found")
+
+    company = (
+        db.query(Company)
+        .filter(Company.id == application.company_id)
+        .first()
+    )
+    if not company:
+        raise HTTPException(status_code=404, detail="Company not found")
+
+    normalized_email = normalize_email(request.contact_email)
+    if not normalized_email:
+        raise HTTPException(status_code=400, detail="Geçerli bir e-posta girin")
+
+    if not is_valid_email(normalized_email):
+        raise HTTPException(status_code=400, detail="E-posta formatı geçersiz")
+
+    company.contact_email = normalized_email
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=409, detail="Bu şirket zaten kayıtlı")
+    db.refresh(company)
+
+    return {
+        "application_id": application.id,
+        "company_id": company.id,
+        "contact_email": company.contact_email
     }
