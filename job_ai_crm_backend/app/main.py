@@ -88,8 +88,6 @@ def cleanup_duplicate_companies_by_email() -> None:
 def startup_cleanup_duplicate_companies() -> None:
     cleanup_duplicate_companies_by_email()
 
-# Frontend'i backend portundan da servis et.
-# Boylece /applications.html gibi sayfalar, Vite portu karisikliklarinda bile acilir.
 frontend_dir = Path(__file__).resolve().parents[2] / "job_ai_crm_frontend"
 if frontend_dir.exists():
     app.mount("/", StaticFiles(directory=str(frontend_dir), html=True), name="frontend")

@@ -149,7 +149,7 @@
                   Başvuru Yöntemi
                 </p>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-sm">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-sm">
                   <label
                     class="flex items-center gap-sm p-md rounded-lg border border-outline-variant bg-white cursor-pointer hover:bg-surface-container-low transition-all"
                   >
@@ -173,6 +173,18 @@
                       class="text-primary focus:ring-primary"
                     />
                     <span class="text-body-sm font-medium">Kayıtlı şirket seç</span>
+                  </label>
+
+                  <label
+                    class="flex items-center gap-sm p-md rounded-lg border border-outline-variant bg-white cursor-pointer hover:bg-surface-container-low transition-all"
+                  >
+                    <input
+                      type="radio"
+                      name="applicationMode"
+                      value="mail"
+                      class="text-primary focus:ring-primary"
+                    />
+                    <span class="text-body-sm font-medium">Mail/ilan ile üret</span>
                   </label>
                 </div>
               </div>
@@ -240,7 +252,7 @@
                 />
               </div>
 
-              <div>
+              <div id="languageWrapper">
                 <label
                   class="block text-label-md text-on-surface mb-xs"
                   for="language"
@@ -255,6 +267,64 @@
                   <option value="tr">Türkçe</option>
                   <option value="en">English</option>
                 </select>
+              </div>
+
+              <div id="mailInputWrapper" class="hidden space-y-md">
+                <label
+                  class="block text-label-md text-on-surface mb-xs"
+                  for="companyName"
+                >
+                  Şirket Adı
+                </label>
+
+                <input
+                  id="companyName"
+                  class="w-full px-md py-sm bg-white border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all text-body-md"
+                  placeholder="Örn: Acme Teknoloji"
+                  type="text"
+                />
+
+                <label
+                  class="block text-label-md text-on-surface mb-xs"
+                  for="recipientEmail"
+                >
+                  Alıcı Mail Adresi
+                </label>
+
+                <input
+                  id="recipientEmail"
+                  class="w-full px-md py-sm bg-white border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all text-body-md"
+                  placeholder="Örn: hiring@company.com"
+                  type="email"
+                />
+
+                <label
+                  class="block text-label-md text-on-surface mb-xs"
+                  for="jobDescription"
+                >
+                  İlan İçeriği / İş Açıklaması
+                </label>
+
+                <textarea
+                  id="jobDescription"
+                  class="w-full px-md py-sm bg-white border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all text-body-md"
+                  placeholder="LinkedIn veya kariyer sitesindeki ilan metnini buraya yapıştırabilirsiniz."
+                  rows="4"
+                ></textarea>
+
+                <label
+                  class="block text-label-md text-on-surface mb-xs"
+                  for="userInstruction"
+                >
+                  Mail Nasıl Olsun? / Özel Talimat
+                </label>
+
+                <textarea
+                  id="userInstruction"
+                  class="w-full px-md py-sm bg-white border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all text-body-md"
+                  placeholder="Örn: Samimi ama profesyonel bir ton kullan, backend tecrübemi özellikle vurgula."
+                  rows="3"
+                ></textarea>
               </div>
 
               <button

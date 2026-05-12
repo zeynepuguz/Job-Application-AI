@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 from typing import Optional
 from uuid import UUID
 from datetime import datetime
@@ -56,3 +56,19 @@ class CompanyChatResponse(BaseModel):
     company_id: UUID
     question: str
     answer: str
+
+
+
+class ApplicationEmailRequest(BaseModel):
+    company_name: Optional[str] = None
+    position: Optional[str] = None
+    recipient_email: Optional[EmailStr] = None
+    job_description: Optional[str] = None
+    user_instruction: Optional[str] = None
+
+
+class ApplicationEmailResponse(BaseModel):
+    id: str
+    subject: str
+    body: str
+    recipient_email: Optional[str] = None

@@ -62,3 +62,4 @@ class UpdateContactEmailResponse(BaseModel):
     application_id: UUID
     company_id: UUID
     contact_email: str
+

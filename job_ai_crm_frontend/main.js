@@ -25,6 +25,16 @@ function getApplicationMode() {
   return checked ? checked.value : "url";
 }
 
+function updateMailModePlaceholders(mode) {
+  const roleInput = $("targetRole");
+  if (roleInput) {
+    roleInput.placeholder =
+      mode === "mail"
+        ? "Örn: Backend AI Engineer (opsiyonel)"
+        : "Örn: Backend AI Engineer";
+  }
+}
+
 function hide(el) {
   if (!el) return;
   el.classList.add("hidden");
@@ -441,18 +451,34 @@ function setupApplicationMode() {
       if (mode === "url") {
         show($("urlInputWrapper"));
         hide($("companySelectWrapper"));
+        hide($("mailInputWrapper"));
+        show($("languageWrapper"));
         $("selectedCompanyId").value = "";
         currentCompanyId = null;
         $("selectedCompanyText").textContent = "Henüz şirket seçilmedi.";
         resetContactEmail();
         setChatCompanyInfo();
         clearCompanyChat();
-      } else {
+      } else if (mode === "company") {
         hide($("urlInputWrapper"));
         show($("companySelectWrapper"));
+        hide($("mailInputWrapper"));
+        show($("languageWrapper"));
         await loadCompanies();
         setChatCompanyInfo();
+      } else {
+        hide($("urlInputWrapper"));
+        hide($("companySelectWrapper"));
+        show($("mailInputWrapper"));
+        hide($("languageWrapper"));
+        $("selectedCompanyId").value = "";
+        currentCompanyId = null;
+        $("selectedCompanyText").textContent = "Henüz şirket seçilmedi.";
+        setChatCompanyInfo();
+        clearCompanyChat();
       }
+
+      updateMailModePlaceholders(mode);
     });
   });
 
@@ -693,6 +719,10 @@ function applyCvToRole(cvKey) {
   }
 }
 
+function createDraftRecordId() {
+  return `draft-${Date.now()}`;
+}
+
 $("btnGenerate").addEventListener("click", async () => {
   clearError();
   setSuccess(false);
@@ -704,18 +734,19 @@ $("btnGenerate").addEventListener("click", async () => {
   const companyId = $("selectedCompanyId")?.value.trim();
   const role = $("targetRole").value.trim();
   const language = $("language").value;
+  const companyName = ($("companyName")?.value || "").trim();
+  const recipientEmail = ($("recipientEmail")?.value || "").trim();
+  const jobDescription = ($("jobDescription")?.value || "").trim();
+  const userInstruction = ($("userInstruction")?.value || "").trim();
 
-  if (!role) {
+  let payload = {};
+  let companyDisplay = "";
+  let endpoint = "/applications/prepare";
+
+  if (mode !== "mail" && !role) {
     setError("Hedef pozisyon zorunludur.");
     return;
   }
-
-  const payload = {
-    role,
-    language,
-  };
-
-  let companyDisplay = "";
 
   if (mode === "url") {
     if (!url) {
@@ -723,18 +754,47 @@ $("btnGenerate").addEventListener("click", async () => {
       return;
     }
 
-    payload.url = url;
+    payload = { role, language, url };
     companyDisplay = url;
-  } else {
+  } else if (mode === "company") {
     if (!companyId) {
       setError("Lütfen kayıtlı bir şirket seçin.");
       return;
     }
 
-    payload.company_id = companyId;
+    payload = { role, language, company_id: companyId };
 
     const selectedCompany = companies.find((c) => c.id === companyId);
     companyDisplay = selectedCompany?.name || selectedCompany?.website || companyId;
+  } else {
+    if (!companyName && !recipientEmail) {
+      setError("Şirket adı veya alıcı mail adresinden en az biri dolu olmalı.");
+      return;
+    }
+
+    if (!companyName && recipientEmail && !userInstruction) {
+      setError(
+        "Şirket bilgisi olmadan mail üretmek için mailin nasıl yazılacağını açıklamalısın."
+      );
+      return;
+    }
+
+    if (recipientEmail && !isValidEmail(recipientEmail)) {
+      setError("Geçerli bir alıcı mail adresi girin.");
+      return;
+    }
+
+    endpoint = "/companies/generate-application-email";
+
+    payload = {
+      company_name: companyName || null,
+      position: role || null,
+      recipient_email: recipientEmail || null,
+      job_description: jobDescription || null,
+      user_instruction: userInstruction || null,
+    };
+
+    companyDisplay = companyName || recipientEmail || "Belirtilmedi";
   }
 
   const btn = $("btnGenerate");
@@ -742,7 +802,7 @@ $("btnGenerate").addEventListener("click", async () => {
   setLoading(true);
 
   try {
-    const res = await fetch("/applications/prepare", {
+    const res = await fetch(endpoint, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
@@ -754,8 +814,41 @@ $("btnGenerate").addEventListener("click", async () => {
 
     const data = await res.json();
 
+    if (mode === "mail") {
+      applicationId = data.id || data.application_id || createDraftRecordId();
+      currentCompanyId = null;
+
+      setChatCompanyInfo();
+      clearCompanyChat();
+
+      updatePreview(data.subject, data.body);
+      setContactEmail(data.recipient_email || recipientEmail || null);
+
+      upsertApplicationRecord({
+        id: applicationId,
+        companyUrl: "",
+        companyName: companyDisplay,
+        role: role || "",
+        language: "tr",
+        cvKey: getCvKeyFromRole(role || "ai engineer"),
+        contactEmail: data.recipient_email || recipientEmail || "",
+        subject: data.subject || "",
+        body: data.body || "",
+        status: "draft",
+      });
+
+      setSuccessText("E-posta başarıyla oluşturuldu.");
+      setSendState(Boolean(data.recipient_email || recipientEmail));
+      showContactEmailEditor(!(data.recipient_email || recipientEmail));
+      $("btnRefine").disabled = false;
+      setSuccess(true);
+
+      return;
+    }
+
     applicationId = data.application_id;
     currentCompanyId = data.company_id || (mode === "company" ? companyId : null);
+
     setChatCompanyInfo();
     clearCompanyChat();
 
@@ -780,7 +873,9 @@ $("btnGenerate").addEventListener("click", async () => {
       setSendState(true);
       showContactEmailEditor(false);
     } else {
-      setSuccessText("E-posta oluştu ama şirketin iletişim e-postası bulunamadı. Elle ekleyebilirsin.");
+      setSuccessText(
+        "E-posta oluştu ama şirketin iletişim e-postası bulunamadı. Elle ekleyebilirsin."
+      );
       setSendState(false);
       showContactEmailEditor(true);
     }
@@ -923,6 +1018,7 @@ setupCompanyChat();
 syncCvCard("ai_engineer");
 setChatCompanyInfo();
 clearCompanyChat();
+updateMailModePlaceholders(getApplicationMode());
 
 if ($("btnRefreshApplications")) {
   $("btnRefreshApplications").addEventListener("click", () => {

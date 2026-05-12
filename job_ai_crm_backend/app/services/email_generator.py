@@ -114,3 +114,115 @@ End EXACTLY with:
         "subject": subject,
         "body": email_body
     }
+
+def generate_manual_email(
+    company_name: str | None,
+    role: str | None,
+    recipient_email: str | None,
+    job_description: str | None,
+    user_instruction: str | None,
+) -> dict:
+
+    full_name = os.getenv("FULL_NAME")
+    phone = os.getenv("PHONE_NUMBER")
+    email = os.getenv("EMAIL_ADDRESS")
+    linkedin = os.getenv("LINKEDIN_URL")
+
+    closing = f"""Saygılarımla,
+{full_name}
+{phone}
+{email}
+{linkedin}"""
+
+    subject = (
+        f"{role} Başvurusu"
+        if role
+        else "İş Başvurusu"
+    )
+
+    prompt = f"""
+You are writing a REALISTIC, short and natural job application email.
+
+IMPORTANT:
+- The email MUST feel human-written.
+- Never sound robotic or AI-generated.
+- Avoid exaggerated enthusiasm.
+- Avoid generic corporate phrases.
+
+Application Information:
+
+Company:
+{company_name or "Not specified"}
+
+Role:
+{role or "Not specified"}
+
+Recipient Email:
+{recipient_email or "Not specified"}
+
+Job Description:
+{job_description or "Not specified"}
+
+User Instructions:
+{user_instruction or "Not specified"}
+
+STRICT RULES:
+- Write in Turkish.
+- Do NOT use English words.
+- Do NOT use phrases like:
+  - "tutkum"
+  - "beni heyecanlandırıyor"
+  - "değer katacağıma inanıyorum"
+  - "dinamik ekibiniz"
+  - "vizyonunuz"
+- Do NOT sound emotional.
+- Keep confidence calm and natural.
+- Keep the email SHORT.
+- Maximum 120 words.
+- Do NOT invent experiences.
+- Do NOT invent technologies.
+- If job description exists, adapt naturally.
+- If user instruction exists, prioritize it.
+- Never use placeholders like:
+  [Adınız]
+  [Telefon]
+  [Email]
+
+STYLE:
+- clean
+- direct
+- modern
+- realistic
+- human
+
+STRUCTURE:
+- greeting
+- 1-2 short paragraphs
+- short closing
+
+End EXACTLY with:
+
+{closing}
+"""
+
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",
+        temperature=0.5,
+        messages=[
+            {
+                "role": "system",
+                "content": "You write extremely natural Turkish application emails. Never sound like AI."
+            },
+            {
+                "role": "user",
+                "content": prompt
+            }
+        ]
+    )
+
+    email_body = response.choices[0].message.content.strip()
+
+    return {
+        "subject": subject,
+        "body": email_body
+    }

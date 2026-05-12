@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException
+from app.models.generated_email import GeneratedEmail
 from sqlalchemy.orm import Session
-from sqlalchemy.exc import IntegrityError
 import re
+import json
 
 from app.database import get_db
 from app.models.company_chat_message import CompanyChatMessage
@@ -13,22 +14,33 @@ from app.schemas.company import (
     CompanyContactEmailUpdateRequest,
     CompanyContactEmailUpdateResponse,
     CompanyChatRequest,
-    CompanyChatResponse
+    CompanyChatResponse,
+    ApplicationEmailRequest,
+    ApplicationEmailResponse
 )
 from app.services.url_analyzer import (
     fetch_website_text,
     extract_company_data_from_text,
     normalize_url
 )
-from app.services.ai_analyzer import analyze_with_ai
+from app.services.ai_analyzer import analyze_with_ai, generate_manual_email
 from app.services.vector_store import upsert_company_text
 from app.services.company_chat import answer_company_question
+
 
 router = APIRouter(
     prefix="/companies",
     tags=["Companies"]
 )
 
+
+def extract_json_from_ai_response(text: str):
+    match = re.search(r"\{.*\}", text, re.DOTALL)
+
+    if not match:
+        raise ValueError("No JSON found")
+
+    return json.loads(match.group())
 
 
 def normalize_email(email: str | None) -> str | None:
@@ -227,3 +239,48 @@ def clear_company_chat(
     return {
         "message": "Company chat history cleared successfully"
     }
+
+@router.post("/generate-application-email", response_model=ApplicationEmailResponse)
+def generate_application_email(
+    request: ApplicationEmailRequest,
+    db: Session = Depends(get_db)
+):
+    if not request.company_name and not request.recipient_email:
+        raise HTTPException(
+            status_code=400,
+            detail="Company name or recipient email is required"
+        )
+
+    if request.recipient_email and not request.company_name and not request.user_instruction:
+        raise HTTPException(
+            status_code=400,
+            detail="User instruction is required when only recipient email is provided"
+        )
+
+    parsed = generate_manual_email(
+        company_name=request.company_name,
+        role=request.position,
+        recipient_email=request.recipient_email,
+        job_description=request.job_description,
+        user_instruction=request.user_instruction,
+    )
+
+    generated_email = GeneratedEmail(
+        application_id=None,
+        subject=parsed.get("subject", "İş Başvurusu"),
+        body=parsed.get("body", ""),
+        tone="natural",
+        language="tr",
+        status="draft",
+    )
+
+    db.add(generated_email)
+    db.commit()
+    db.refresh(generated_email)
+
+    return ApplicationEmailResponse(
+        id=generated_email.id,
+        subject=generated_email.subject,
+        body=generated_email.body,
+        recipient_email=str(request.recipient_email) if request.recipient_email else None
+    )
