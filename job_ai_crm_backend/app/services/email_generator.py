@@ -7,7 +7,13 @@ load_dotenv()
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 
-def generate_email(company, cv, role: str, language: str | None) -> dict:
+def generate_email(
+    company,
+    cv,
+    role: str,
+    language: str | None,
+    user_instruction: str | None = None,
+) -> dict:
     full_name = os.getenv("FULL_NAME")
     phone = os.getenv("PHONE_NUMBER")
     email = os.getenv("EMAIL_ADDRESS")
@@ -32,6 +38,13 @@ def generate_email(company, cv, role: str, language: str | None) -> dict:
 {linkedin}"""
         subject = f"{role} Başvurusu"
 
+    extra = (user_instruction or "").strip()
+    extra_block = (
+        f"\n\nCandidate preferences (follow if compatible; do not invent facts):\n{extra}\n"
+        if extra
+        else ""
+    )
+
     prompt = f"""
 You are writing a REALISTIC, short and natural email. It must feel like a real human wrote it.
 
@@ -44,6 +57,7 @@ Target Role:
 
 Language:
 - {lang_instruction}
+{extra_block}
 
 IMPORTANT RULES:
 - This is NOT a CV summary.

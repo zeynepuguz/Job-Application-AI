@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Body
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 import os
@@ -15,6 +15,7 @@ from app.schemas.application import (
     PrepareApplicationResponse,
     RefineEmailRequest,
     RefineEmailResponse,
+    SendApplicationRequest,
     SendApplicationResponse,
     SentApplicationsResponse,
     UpdateContactEmailRequest,
@@ -220,7 +221,8 @@ def prepare_application(
         company=company,
         cv=cv,
         role=request.role,
-        language=request.language
+        language=request.language,
+        user_instruction=request.user_instruction,
     )
 
     application = Application(
@@ -322,6 +324,7 @@ def refine_application_email(
 @router.post("/{application_id}/send", response_model=SendApplicationResponse)
 def send_application(
     application_id: str,
+    payload: SendApplicationRequest = Body(default_factory=SendApplicationRequest),
     db: Session = Depends(get_db)
 ):
     application = (
@@ -342,12 +345,6 @@ def send_application(
     if not company:
         raise HTTPException(status_code=404, detail="Company not found")
 
-    if not company.contact_email:
-        raise HTTPException(
-            status_code=400,
-            detail="Company contact email not found"
-        )
-
     generated_email = (
         db.query(GeneratedEmail)
         .filter(GeneratedEmail.application_id == application.id)
@@ -363,11 +360,29 @@ def send_application(
             detail="This application has already been sent"
         )
 
+    if payload.subject is not None and payload.subject.strip():
+        generated_email.subject = payload.subject.strip()
+
+    if payload.body is not None and payload.body.strip():
+        generated_email.body = payload.body.strip()
+
+    to_email = None
+    if payload.to_email and str(payload.to_email).strip():
+        to_email = str(payload.to_email).strip()
+    elif company.contact_email:
+        to_email = str(company.contact_email).strip()
+
+    if not to_email:
+        raise HTTPException(
+            status_code=400,
+            detail="Alıcı e-postası bulunamadı. Önizlemede alıcı alanını doldurun veya şirket kaydına iletişim ekleyin."
+        )
+
     cv_path = choose_cv_file_path(application.role_type)
 
     try:
         send_real_email(
-            to_email=company.contact_email,
+            to_email=to_email,
             subject=generated_email.subject,
             body=generated_email.body,
             cv_path=cv_path

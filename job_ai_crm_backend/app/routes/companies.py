@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from app.models.generated_email import GeneratedEmail
+from app.services.email_history import get_recent_email_patterns
 from sqlalchemy.orm import Session
 import re
 import json
@@ -7,6 +8,8 @@ import json
 from app.database import get_db
 from app.models.company_chat_message import CompanyChatMessage
 from app.models.company import Company
+from app.models.application import Application
+from app.models.cv import CV
 from app.schemas.company import (
     CompanyCreate,
     CompanyAnalyzeRequest,
@@ -26,7 +29,8 @@ from app.services.url_analyzer import (
 from app.services.ai_analyzer import analyze_with_ai, generate_manual_email
 from app.services.vector_store import upsert_company_text
 from app.services.company_chat import answer_company_question
-
+from app.services.ai_agents.orchestrator import generate_agentic_email
+from app.services.user_ai_memory import get_or_create_ai_preferences
 
 router = APIRouter(
     prefix="/companies",
@@ -245,42 +249,125 @@ def generate_application_email(
     request: ApplicationEmailRequest,
     db: Session = Depends(get_db)
 ):
-    if not request.company_name and not request.recipient_email:
+    job_desc = (request.job_description or "").strip()
+    company_name = (request.company_name or "").strip()
+    has_anchor = bool(company_name or request.recipient_email or job_desc)
+
+    if not has_anchor:
         raise HTTPException(
             status_code=400,
-            detail="Company name or recipient email is required"
+            detail="Şirket adı, alıcı e-postası veya iş ilanı metninden en az biri gereklidir."
         )
 
-    if request.recipient_email and not request.company_name and not request.user_instruction:
+    if (
+        request.recipient_email
+        and not company_name
+        and not job_desc
+        and not (request.user_instruction or "").strip()
+    ):
         raise HTTPException(
             status_code=400,
             detail="User instruction is required when only recipient email is provided"
         )
 
-    parsed = generate_manual_email(
-        company_name=request.company_name,
-        role=request.position,
-        recipient_email=request.recipient_email,
-        job_description=request.job_description,
-        user_instruction=request.user_instruction,
+    memory = get_or_create_ai_preferences(db)
+
+    memory_payload = {
+        "preferred_tone": memory.preferred_tone,
+        "email_length": memory.email_length,
+        "preferred_focus": memory.preferred_focus,
+        "avoid_phrases": memory.avoid_phrases,
+        "preferred_language": memory.preferred_language,
+    }
+
+    recent_email_patterns = get_recent_email_patterns(
+        db=db,
+        limit=5,
     )
 
+    agent_result = generate_agentic_email(
+        company_name=company_name or None,
+        role=request.position,
+        job_description=request.job_description,
+        user_instruction=request.user_instruction,
+        memory=memory_payload,
+        recipient_email=request.recipient_email,
+        recent_email_patterns=recent_email_patterns,
+    )
+
+    email_body = agent_result["body"]
+
+    subject = (
+        f"{request.position} Başvurusu"
+        if request.position
+        else "İş Başvurusu"
+    )
+
+    role_key = (request.cv_role_type or "ai_engineer").strip()
+    if role_key not in ("ai_engineer", "backend_ai_engineer"):
+        role_key = "ai_engineer"
+
+    cv = (
+        db.query(CV)
+        .filter(CV.role_type == role_key)
+        .filter(CV.is_active == True)
+        .first()
+    )
+    if not cv:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Aktif CV bulunamadı: {role_key}",
+        )
+
+    display_name = (company_name or "İş başvurusu")[:255] or "İş başvurusu"
+
+    rec = str(request.recipient_email) if request.recipient_email else None
+
+    company_row = Company(
+        name=display_name,
+        website=None,
+        contact_email=rec,
+        notes="generate-application-email",
+    )
+    db.add(company_row)
+    db.flush()
+
+    application_row = Application(
+        company_id=company_row.id,
+        cv_id=cv.id,
+        role_type=cv.role_type,
+        position_title=request.position,
+        status="draft",
+        source="agent_email",
+    )
+    db.add(application_row)
+    db.flush()
+
     generated_email = GeneratedEmail(
-        application_id=None,
-        subject=parsed.get("subject", "İş Başvurusu"),
-        body=parsed.get("body", ""),
+        application_id=application_row.id,
+        subject=subject,
+        body=email_body,
         tone="natural",
         language="tr",
         status="draft",
+
+        strategy=agent_result.get("strategy"),
+        review=agent_result.get("review"),
+        job_analysis=agent_result.get("job_analysis"),
+        rewrite_count=agent_result.get("rewrite_count", 0),
     )
 
     db.add(generated_email)
     db.commit()
     db.refresh(generated_email)
+    db.refresh(application_row)
+    db.refresh(company_row)
 
     return ApplicationEmailResponse(
-        id=generated_email.id,
+        id=str(generated_email.id),
+        application_id=str(application_row.id),
+        company_id=str(company_row.id),
         subject=generated_email.subject,
         body=generated_email.body,
-        recipient_email=str(request.recipient_email) if request.recipient_email else None
+        recipient_email=rec,
     )

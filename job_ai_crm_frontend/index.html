@@ -131,8 +131,8 @@
     </header>
 
     <main class="flex-grow pt-xxl pb-xxl px-gutter max-w-7xl mx-auto w-full mt-16">
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-lg">
-        <div class="lg:col-span-5 space-y-lg">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-xl">
+        <div class="lg:col-span-5 space-y-xl">
           <section class="bg-surface-container-lowest p-xl rounded-xl border border-outline-variant shadow-sm">
             <div class="flex items-center gap-sm mb-lg">
               <span
@@ -143,7 +143,7 @@
               <h2 class="text-h2 text-on-surface">Başvuru Detayları</h2>
             </div>
 
-            <div class="space-y-md">
+            <div class="space-y-lg">
               <div>
                 <p class="block text-label-md text-on-surface mb-sm">
                   Başvuru Yöntemi
@@ -151,89 +151,150 @@
 
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-sm">
                   <label
-                    class="flex items-center gap-sm p-md rounded-lg border border-outline-variant bg-white cursor-pointer hover:bg-surface-container-low transition-all"
+                    class="flex items-center gap-sm p-md rounded-xl border border-outline-variant bg-white cursor-pointer hover:bg-surface-container-low transition-all shadow-sm"
                   >
                     <input
                       type="radio"
                       name="applicationMode"
-                      value="url"
+                      value="career_url"
                       checked
                       class="text-primary focus:ring-primary"
                     />
-                    <span class="text-body-sm font-medium">URL ile yeni şirket</span>
+                    <span class="text-body-sm font-medium">Kariyer URL'si</span>
                   </label>
 
                   <label
-                    class="flex items-center gap-sm p-md rounded-lg border border-outline-variant bg-white cursor-pointer hover:bg-surface-container-low transition-all"
+                    class="flex items-center gap-sm p-md rounded-xl border border-outline-variant bg-white cursor-pointer hover:bg-surface-container-low transition-all shadow-sm"
                   >
                     <input
                       type="radio"
                       name="applicationMode"
-                      value="company"
+                      value="recruiter_mail"
                       class="text-primary focus:ring-primary"
                     />
-                    <span class="text-body-sm font-medium">Kayıtlı şirket seç</span>
+                    <span class="text-body-sm font-medium">Şirket / Recruiter maili</span>
                   </label>
 
                   <label
-                    class="flex items-center gap-sm p-md rounded-lg border border-outline-variant bg-white cursor-pointer hover:bg-surface-container-low transition-all"
+                    class="flex items-center gap-sm p-md rounded-xl border border-outline-variant bg-white cursor-pointer hover:bg-surface-container-low transition-all shadow-sm"
                   >
                     <input
                       type="radio"
                       name="applicationMode"
-                      value="mail"
+                      value="linkedin_job"
                       class="text-primary focus:ring-primary"
                     />
-                    <span class="text-body-sm font-medium">Mail/ilan ile üret</span>
+                    <span class="text-body-sm font-medium">LinkedIn / İlan metni</span>
                   </label>
                 </div>
               </div>
 
-              <div id="urlInputWrapper">
+              <div id="urlInputWrapper" class="space-y-md">
                 <label
                   class="block text-label-md text-on-surface mb-xs"
                   for="companyUrl"
                 >
-                  Şirket / Kariyer URL
+                  Kariyer sayfası URL
                 </label>
 
                 <input
                   id="companyUrl"
-                  class="w-full px-md py-sm bg-white border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all text-body-md"
+                  class="w-full px-md py-sm bg-white border border-outline-variant rounded-xl shadow-sm focus:ring-2 focus:ring-primary focus:border-primary transition-all text-body-md"
                   placeholder="https://sirket.com/careers"
                   type="url"
                 />
               </div>
 
-              <div id="companySelectWrapper" class="hidden space-y-sm">
+              <div id="mailInputWrapper" class="hidden space-y-md">
                 <label
                   class="block text-label-md text-on-surface mb-xs"
-                  for="companySearch"
+                  for="companyName"
                 >
-                  Kayıtlı Şirket Ara
+                  Şirket adı (isteğe bağlı)
                 </label>
 
                 <input
-                  id="companySearch"
-                  class="w-full px-md py-sm bg-white border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all text-body-md"
-                  placeholder="Şirket adı yazın..."
+                  id="companyName"
+                  class="w-full px-md py-sm bg-white border border-outline-variant rounded-xl shadow-sm focus:ring-2 focus:ring-primary focus:border-primary transition-all text-body-md"
+                  placeholder="Örn: Acme Teknoloji"
                   type="text"
                 />
 
-                <div
-                  id="companyList"
-                  class="max-h-56 overflow-y-auto bg-white border border-outline-variant rounded-lg divide-y divide-outline-variant"
+                <label
+                  class="block text-label-md text-on-surface mb-xs"
+                  for="recipientEmail"
                 >
-                  <div class="p-md text-body-sm text-slate-500">
-                    Şirketler yükleniyor...
-                  </div>
-                </div>
+                  Alıcı e-postası
+                </label>
 
-                <input id="selectedCompanyId" type="hidden" />
+                <input
+                  id="recipientEmail"
+                  class="w-full px-md py-sm bg-white border border-outline-variant rounded-xl shadow-sm focus:ring-2 focus:ring-primary focus:border-primary transition-all text-body-md"
+                  placeholder="Örn: hiring@company.com"
+                  type="email"
+                />
+              </div>
 
-                <p id="selectedCompanyText" class="text-label-sm text-slate-500">
-                  Henüz şirket seçilmedi.
-                </p>
+              <div id="linkedinJobWrapper" class="hidden space-y-md">
+                <label
+                  class="block text-label-md text-on-surface mb-xs"
+                  for="jobDescription"
+                >
+                  LinkedIn / ilan metni
+                </label>
+
+                <textarea
+                  id="jobDescription"
+                  class="w-full px-md py-sm bg-white border border-outline-variant rounded-xl shadow-sm focus:ring-2 focus:ring-primary focus:border-primary transition-all text-body-md min-h-[140px]"
+                  placeholder="İlan veya gönderi metnini buraya yapıştırın."
+                  rows="6"
+                ></textarea>
+
+                <label
+                  class="block text-label-md text-on-surface mb-xs"
+                  for="linkedinRecipientEmail"
+                >
+                  Alıcı e-postası (isteğe bağlı)
+                </label>
+
+                <input
+                  id="linkedinRecipientEmail"
+                  class="w-full px-md py-sm bg-white border border-outline-variant rounded-xl shadow-sm focus:ring-2 focus:ring-primary focus:border-primary transition-all text-body-md"
+                  placeholder="Örn: recruiter@company.com"
+                  type="email"
+                />
+              </div>
+
+              <div>
+                <label
+                  class="block text-label-md text-on-surface mb-xs"
+                  for="mailStyleInstruction"
+                >
+                  Mail nasıl yazılsın?
+                </label>
+
+                <textarea
+                  id="mailStyleInstruction"
+                  class="w-full px-md py-sm bg-white border border-outline-variant rounded-xl shadow-sm focus:ring-2 focus:ring-primary focus:border-primary transition-all text-body-md"
+                  placeholder="Örn: Kısa ve direkt yaz · Daha startup tarzı yaz · Resmi ama kısa yaz · Samimi bir outreach maili olsun"
+                  rows="3"
+                ></textarea>
+              </div>
+
+              <div>
+                <label
+                  class="block text-label-md text-on-surface mb-xs"
+                  for="userInstruction"
+                >
+                  Ek talimat (isteğe bağlı)
+                </label>
+
+                <textarea
+                  id="userInstruction"
+                  class="w-full px-md py-sm bg-white border border-outline-variant rounded-xl shadow-sm focus:ring-2 focus:ring-primary focus:border-primary transition-all text-body-md"
+                  placeholder="Başvuru bağlamı, yönlendirme veya ek notlar."
+                  rows="3"
+                ></textarea>
               </div>
 
               <div>
@@ -241,13 +302,13 @@
                   class="block text-label-md text-on-surface mb-xs"
                   for="targetRole"
                 >
-                  Hedef Pozisyon
+                  Hedef pozisyon
                 </label>
 
                 <input
                   id="targetRole"
-                  class="w-full px-md py-sm bg-white border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all text-body-md"
-                  placeholder="Örn: Backend AI Engineer"
+                  class="w-full px-md py-sm bg-white border border-outline-variant rounded-xl shadow-sm focus:ring-2 focus:ring-primary focus:border-primary transition-all text-body-md"
+                  placeholder="Ne yazdıysanız aynen kullanılır; otomatik rol tamamlama yoktur."
                   type="text"
                 />
               </div>
@@ -262,77 +323,41 @@
 
                 <select
                   id="language"
-                  class="w-full px-md py-sm bg-white border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all text-body-md"
+                  class="w-full px-md py-sm bg-white border border-outline-variant rounded-xl shadow-sm focus:ring-2 focus:ring-primary focus:border-primary transition-all text-body-md"
                 >
                   <option value="tr">Türkçe</option>
                   <option value="en">English</option>
                 </select>
               </div>
 
-              <div id="mailInputWrapper" class="hidden space-y-md">
-                <label
-                  class="block text-label-md text-on-surface mb-xs"
-                  for="companyName"
-                >
-                  Şirket Adı
-                </label>
-
-                <input
-                  id="companyName"
-                  class="w-full px-md py-sm bg-white border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all text-body-md"
-                  placeholder="Örn: Acme Teknoloji"
-                  type="text"
-                />
-
-                <label
-                  class="block text-label-md text-on-surface mb-xs"
-                  for="recipientEmail"
-                >
-                  Alıcı Mail Adresi
-                </label>
-
-                <input
-                  id="recipientEmail"
-                  class="w-full px-md py-sm bg-white border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all text-body-md"
-                  placeholder="Örn: hiring@company.com"
-                  type="email"
-                />
-
-                <label
-                  class="block text-label-md text-on-surface mb-xs"
-                  for="jobDescription"
-                >
-                  İlan İçeriği / İş Açıklaması
-                </label>
-
-                <textarea
-                  id="jobDescription"
-                  class="w-full px-md py-sm bg-white border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all text-body-md"
-                  placeholder="LinkedIn veya kariyer sitesindeki ilan metnini buraya yapıştırabilirsiniz."
-                  rows="4"
-                ></textarea>
-
-                <label
-                  class="block text-label-md text-on-surface mb-xs"
-                  for="userInstruction"
-                >
-                  Mail Nasıl Olsun? / Özel Talimat
-                </label>
-
-                <textarea
-                  id="userInstruction"
-                  class="w-full px-md py-sm bg-white border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all text-body-md"
-                  placeholder="Örn: Samimi ama profesyonel bir ton kullan, backend tecrübemi özellikle vurgula."
-                  rows="3"
-                ></textarea>
-              </div>
-
               <button
                 type="button"
                 id="btnGenerate"
-                class="w-full bg-primary text-on-primary font-medium py-md rounded-lg hover:bg-surface-tint active:scale-95 duration-150 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:pointer-events-none"
+                class="w-full bg-primary text-on-primary font-medium py-md rounded-xl hover:bg-surface-tint active:scale-95 duration-150 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:pointer-events-none shadow-md"
               >
-                <span>E-posta Oluştur</span>
+                <svg
+                  id="btnGenerateSpinner"
+                  class="hidden h-5 w-5 animate-spin text-on-primary"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <circle
+                    class="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    stroke-width="4"
+                  ></circle>
+                  <path
+                    class="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+                <span id="btnGenerateLabel">E-posta Oluştur</span>
                 <span class="material-symbols-outlined text-lg">auto_awesome</span>
               </button>
             </div>
@@ -381,7 +406,7 @@
               </div>
 
               <p class="text-label-sm text-slate-500">
-                Not: Backend tarafı CV'yi role göre otomatik seçer. Bu alan frontend önizlemesi içindir.
+                CV seçimi yalnızca sizin belirlediğiniz profil ile yapılır; pozisyon alanından otomatik eşleştirme yapılmaz. Gönderimde hangi CV kullanılacağı seçiminize bağlıdır.
               </p>
             </div>
           </section>
@@ -440,98 +465,94 @@
           </section>
         </div>
 
-        <div class="lg:col-span-7 flex flex-col gap-lg">
+        <div class="lg:col-span-7 flex flex-col gap-xl">
           <section
-            class="bg-surface-container-lowest flex-grow rounded-xl border border-outline-variant shadow-sm flex flex-col overflow-hidden"
+            class="bg-surface-container-lowest flex-grow rounded-xl border border-outline-variant shadow-md flex flex-col overflow-hidden"
           >
             <div
-              class="bg-surface-container-low px-xl py-md border-b border-outline-variant flex items-center justify-between"
+              class="bg-gradient-to-b from-surface-container-high to-surface-container-low px-xl py-md border-b border-outline-variant flex items-center justify-between shrink-0"
             >
-              <div class="flex items-center gap-sm">
+              <div class="flex items-center gap-sm min-w-0">
                 <span
-                  class="bg-tertiary text-on-tertiary w-6 h-6 rounded-full flex items-center justify-center text-label-sm"
+                  class="bg-tertiary text-on-tertiary w-6 h-6 rounded-full flex items-center justify-center text-label-sm shrink-0"
                 >
                   4
                 </span>
-                <h2 class="text-h2 text-on-surface">E-posta Önizleme</h2>
+                <h2 class="text-h2 text-on-surface truncate">E-posta Önizleme</h2>
               </div>
 
-              <div class="flex gap-xs">
+              <div class="flex gap-xs shrink-0">
                 <div class="w-3 h-3 rounded-full bg-red-400"></div>
                 <div class="w-3 h-3 rounded-full bg-amber-400"></div>
                 <div class="w-3 h-3 rounded-full bg-green-400"></div>
               </div>
             </div>
 
-            <div class="p-xl space-y-lg flex-grow">
-              <div class="border-b border-outline-variant pb-md">
-                <div class="flex items-center gap-md flex-wrap">
-                  <span class="text-label-sm text-slate-400 w-16 uppercase tracking-wider shrink-0">
-                    Konu:
-                  </span>
-
-                  <span
-                    id="emailSubject"
-                    class="text-body-md font-semibold text-on-surface"
-                  >
-                    —
-                  </span>
-                </div>
-              </div>
-
-              <div id="emailSkeleton" class="hidden animate-pulse space-y-md">
-                <div class="h-4 bg-slate-200 rounded w-3/4"></div>
-                <div class="h-4 bg-slate-200 rounded w-full"></div>
-                <div class="h-4 bg-slate-200 rounded w-5/6"></div>
-                <div class="h-4 bg-slate-200 rounded w-2/3"></div>
-              </div>
-
+            <div class="p-md sm:p-xl flex-grow flex flex-col gap-0 bg-surface-container-lowest">
               <div
-                id="emailBody"
-                class="text-body-md text-on-surface space-y-md leading-relaxed whitespace-pre-wrap min-h-[120px]"
+                class="rounded-xl border border-outline-variant bg-white shadow-sm flex flex-col flex-grow min-h-[320px] overflow-hidden"
               >
-                Formu doldurup "E-posta Oluştur" ile başlayın. Önizleme burada görünür.
-              </div>
-
-              <div class="pt-sm border-t border-outline-variant">
-                <span class="text-label-sm text-slate-400">Hedef İletişim:</span>
-                <span id="contactEmail" class="text-body-sm text-on-surface ml-2">
-                  Bilinmiyor
-                </span>
-                <button
-                  type="button"
-                  id="btnEditContactEmail"
-                  class="ml-3 px-sm py-xs text-label-sm rounded-md border border-outline-variant hover:bg-surface-container transition-all"
+                <div
+                  class="px-md py-sm border-b border-outline-variant bg-surface-container-low flex flex-col gap-sm"
                 >
-                  Maili Değiştir
-                </button>
-                <div id="contactEmailEditor" class="hidden mt-sm flex items-center gap-sm flex-wrap">
-                  <input
-                    id="contactEmailInput"
-                    type="email"
-                    class="flex-1 min-w-[220px] px-md py-sm bg-white border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all text-body-md"
-                    placeholder="ornek@sirket.com"
-                  />
+                  <div class="flex flex-col sm:flex-row sm:items-center gap-xs sm:gap-md">
+                    <span class="text-label-sm text-slate-500 shrink-0 w-24">Alıcı</span>
+                    <input
+                      id="contactEmailInput"
+                      type="email"
+                      class="flex-1 min-w-0 px-md py-sm bg-white border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all text-body-md"
+                      placeholder="alici@sirket.com"
+                      autocomplete="email"
+                    />
+                  </div>
+                  <div class="flex flex-col sm:flex-row sm:items-center gap-xs sm:gap-md">
+                    <span class="text-label-sm text-slate-500 shrink-0 w-24">Konu</span>
+                    <input
+                      id="emailSubject"
+                      type="text"
+                      class="flex-1 min-w-0 px-md py-sm bg-white border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all text-body-md font-semibold text-on-surface"
+                      placeholder="Konu satırı"
+                    />
+                  </div>
+                </div>
+
+                <div class="relative flex-grow flex flex-col min-h-[200px] p-md bg-white">
+                  <div id="emailSkeleton" class="hidden absolute inset-0 z-10 bg-white/90 animate-pulse space-y-md p-md">
+                    <div class="h-4 bg-slate-200 rounded w-3/4"></div>
+                    <div class="h-4 bg-slate-200 rounded w-full"></div>
+                    <div class="h-4 bg-slate-200 rounded w-5/6"></div>
+                    <div class="h-4 bg-slate-200 rounded w-2/3"></div>
+                  </div>
+
+                  <textarea
+                    id="emailBody"
+                    class="w-full flex-grow min-h-[200px] resize-y px-md py-sm bg-white border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all text-body-md text-on-surface leading-relaxed"
+                    rows="14"
+                    placeholder="Formu doldurup E-posta Oluştur ile başlayın. Metni buradan düzenleyebilirsiniz."
+                  ></textarea>
+                </div>
+
+                <div
+                  id="companyContactActions"
+                  class="hidden px-md py-sm border-t border-outline-variant bg-surface-container-low flex flex-wrap items-center gap-sm"
+                >
+                  <span class="text-label-sm text-slate-500">Kayıtlı şirket e-postası:</span>
                   <button
                     type="button"
                     id="btnSaveContactEmail"
-                    class="px-md py-sm bg-primary text-on-primary rounded-lg hover:bg-surface-tint transition-all"
+                    class="px-md py-sm bg-primary text-on-primary rounded-lg hover:bg-surface-tint transition-all text-label-sm font-medium"
                   >
-                    Kaydet
+                    Sunucuya kaydet
                   </button>
-                  <button
-                    type="button"
-                    id="btnCancelContactEmail"
-                    class="px-md py-sm bg-white border border-outline-variant rounded-lg hover:bg-surface-container-low transition-all"
-                  >
-                    Vazgeç
-                  </button>
+                  <span id="saveContactEmailHint" class="text-body-sm text-slate-500 hidden sm:inline">
+                    Yalnızca kariyer URL akışından oluşan şirket kaydı için geçerlidir.
+                  </span>
                 </div>
               </div>
             </div>
 
             <div
-              class="p-md bg-tertiary-container/10 border-t border-outline-variant flex items-center gap-sm"
+              class="p-md bg-tertiary-container/10 border-t border-outline-variant flex items-center gap-sm shrink-0"
             >
               <span
                 class="material-symbols-outlined text-tertiary text-lg"
@@ -567,7 +588,29 @@
               disabled
               class="w-full bg-primary text-on-primary text-h3 font-semibold py-xl rounded-xl hover:bg-surface-tint active:scale-95 duration-150 transition-all flex items-center justify-center gap-md group shadow-xl shadow-primary/20 disabled:opacity-50 disabled:pointer-events-none"
             >
-              <span>Başvuruyu Gönder</span>
+              <svg
+                id="btnSendSpinner"
+                class="hidden h-6 w-6 animate-spin text-on-primary"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <circle
+                  class="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  stroke-width="4"
+                ></circle>
+                <path
+                  class="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
+              </svg>
+              <span id="btnSendLabel">Başvuruyu Gönder</span>
               <span class="material-symbols-outlined text-2xl group-hover:translate-x-1 transition-transform">
                 send
               </span>

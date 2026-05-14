@@ -65,10 +65,13 @@ class ApplicationEmailRequest(BaseModel):
     recipient_email: Optional[EmailStr] = None
     job_description: Optional[str] = None
     user_instruction: Optional[str] = None
+    cv_role_type: Optional[str] = None
 
 
 class ApplicationEmailResponse(BaseModel):
     id: str
+    application_id: Optional[str] = None
+    company_id: Optional[str] = None
     subject: str
     body: str
     recipient_email: Optional[str] = None

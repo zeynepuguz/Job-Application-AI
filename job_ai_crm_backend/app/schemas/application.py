@@ -23,6 +23,7 @@ class PrepareApplicationRequest(BaseModel):
     company_id: UUID | None = None
     role: str
     language: str | None = None
+    user_instruction: str | None = None
 
 
 class PrepareApplicationResponse(BaseModel):
@@ -45,6 +46,12 @@ class RefineEmailResponse(BaseModel):
     subject: str
     body: str
     status: str
+
+
+class SendApplicationRequest(BaseModel):
+    subject: str | None = None
+    body: str | None = None
+    to_email: str | None = None
 
 
 class SendApplicationResponse(BaseModel):
