@@ -5,6 +5,8 @@ let currentCompanyId = null;
 let canSendApplication = false;
 let refineSupported = false;
 let companies = [];
+let companiesLoaded = false;
+let companiesLoading = false;
 
 const STORAGE_KEY = "jobai_applications";
 
@@ -23,26 +25,51 @@ const cvProfiles = {
 
 function getApplicationMode() {
   const checked = document.querySelector('input[name="applicationMode"]:checked');
-  return checked ? checked.value : "career_url";
+  return checked ? checked.value : "url";
 }
 
-function readMailStyle() {
-  return ($("mailStyleInstruction")?.value || "").trim();
-}
-
-function readUserExtra() {
+function readUserInstruction() {
   return ($("userInstruction")?.value || "").trim();
 }
 
-function mergedInstructionForApi() {
-  const style = readMailStyle();
-  const extra = readUserExtra();
-  if (style && extra) return `${style}\n\n${extra}`;
-  return style || extra || null;
+function updateMailModePlaceholders(mode) {
+  const roleInput = $("targetRole");
+  if (!roleInput) return;
+
+  roleInput.placeholder =
+    mode === "mail"
+      ? "Örn: Backend AI Engineer (isteğe bağlı)"
+      : "Örn: Backend AI Engineer";
 }
 
 function activeCvKey() {
   return $("cvSelector")?.value || "ai_engineer";
+}
+
+function suggestCvFromText(role, jobDescription) {
+  const text = `${role || ""} ${jobDescription || ""}`.toLowerCase();
+
+  if (
+    text.includes("backend") ||
+    text.includes("api") ||
+    text.includes("fastapi") ||
+    text.includes("django") ||
+    text.includes("backend engineer")
+  ) {
+    return "backend_ai_engineer";
+  }
+
+  if (
+    text.includes("ai") ||
+    text.includes("llm") ||
+    text.includes("machine learning") ||
+    text.includes("researcher") ||
+    text.includes("engineer")
+  ) {
+    return "ai_engineer";
+  }
+
+  return activeCvKey();
 }
 
 function hide(el) {
@@ -365,50 +392,194 @@ async function fetchCompanies() {
   const seen = new Set();
 
   return raw.filter((company) => {
-    const emailKey = (company.contact_email || "").trim().toLowerCase();
-    const fallbackKey = (company.website || company.id || "").trim().toLowerCase();
-    const key = emailKey || fallbackKey;
-
-    if (!key) return true;
-    if (seen.has(key)) return false;
-    seen.add(key);
+    const id = String(company.id || "");
+    if (!id || seen.has(id)) return false;
+    seen.add(id);
     return true;
   });
+}
+
+function filterCompaniesBySearch(term) {
+  const q = (term || "").toLocaleLowerCase("tr-TR").trim();
+  if (!q) return companies;
+
+  return companies.filter((company) => {
+    const name = (company.name || "").toLocaleLowerCase("tr-TR");
+    const website = (company.website || "").toLocaleLowerCase("tr-TR");
+    const email = (company.contact_email || "").toLocaleLowerCase("tr-TR");
+    return name.includes(q) || website.includes(q) || email.includes(q);
+  });
+}
+
+function renderCompanyList(list) {
+  const companyList = $("companyList");
+  if (!companyList) return;
+
+  companyList.innerHTML = "";
+
+  if (!list.length) {
+    const searchTerm = ($("companySearch")?.value || "").trim();
+    const message = searchTerm
+      ? "Aramanızla eşleşen şirket bulunamadı."
+      : companies.length
+        ? "Gösterilecek şirket yok."
+        : "Henüz kayıtlı şirket yok.";
+
+    companyList.innerHTML = `
+      <div class="p-md text-body-sm text-slate-500">
+        ${message}
+      </div>
+    `;
+    return;
+  }
+
+  const selectedId = String($("selectedCompanyId")?.value || "");
+
+  list.forEach((company) => {
+    const item = document.createElement("button");
+    item.type = "button";
+    const isSelected = String(company.id) === selectedId;
+    item.className = [
+      "w-full text-left p-md transition-all border-b border-outline-variant last:border-b-0",
+      isSelected
+        ? "bg-surface-container ring-2 ring-inset ring-primary"
+        : "hover:bg-surface-container-low",
+    ].join(" ");
+
+    item.innerHTML = `
+      <p class="font-semibold text-on-surface">
+        ${company.name || "İsimsiz şirket"}
+      </p>
+      <p class="text-body-sm text-slate-500 truncate">
+        ${company.website || "Web sitesi yok"}
+      </p>
+      <p class="text-body-sm text-slate-500 truncate">
+        ${company.contact_email || "E-posta bulunamadı"}
+      </p>
+    `;
+
+    item.addEventListener("click", () => {
+      $("selectedCompanyId").value = company.id;
+      currentCompanyId = company.id;
+      $("selectedCompanyText").textContent = `Seçili şirket: ${
+        company.name || company.website || company.id
+      }`;
+      setContactEmail(company.contact_email);
+      setChatCompanyInfo();
+      clearCompanyChat();
+      updateCompanyContactActions();
+      renderCompanyList(filterCompaniesBySearch($("companySearch")?.value || ""));
+    });
+
+    companyList.appendChild(item);
+  });
+}
+
+function showCompanyListLoading() {
+  const companyList = $("companyList");
+  if (!companyList) return;
+
+  companyList.innerHTML = `
+    <div class="p-md text-body-sm text-slate-500">
+      Şirketler yükleniyor...
+    </div>
+  `;
+}
+
+async function loadCompanies({ force = false } = {}) {
+  const companyList = $("companyList");
+  if (!companyList) return;
+
+  if (companiesLoading) return;
+
+  if (companiesLoaded && !force) {
+    renderCompanyList(filterCompaniesBySearch($("companySearch")?.value || ""));
+    return;
+  }
+
+  companiesLoading = true;
+  showCompanyListLoading();
+
+  try {
+    companies = await fetchCompanies();
+    companiesLoaded = true;
+    renderCompanyList(filterCompaniesBySearch($("companySearch")?.value || ""));
+  } catch {
+    companiesLoaded = false;
+    companyList.innerHTML = `
+      <div class="p-md text-body-sm text-red-600">
+        Şirketler yüklenirken hata oluştu. Backend çalışıyor mu?
+      </div>
+    `;
+  } finally {
+    companiesLoading = false;
+  }
 }
 
 function setupApplicationMode() {
   const modeInputs = document.querySelectorAll('input[name="applicationMode"]');
 
-  const applyModeVisibility = (mode) => {
+  const applyModeVisibility = async (mode) => {
     const urlWrap = $("urlInputWrapper");
+    const companyWrap = $("companySelectWrapper");
     const mailWrap = $("mailInputWrapper");
-    const liWrap = $("linkedinJobWrapper");
     const langWrap = $("languageWrapper");
 
-    if (mode === "career_url") {
+    if (mode === "url") {
       show(urlWrap);
+      hide(companyWrap);
       hide(mailWrap);
-      hide(liWrap);
       show(langWrap);
-    } else if (mode === "recruiter_mail") {
+      if ($("selectedCompanyId")) $("selectedCompanyId").value = "";
+      currentCompanyId = null;
+      if ($("selectedCompanyText")) {
+        $("selectedCompanyText").textContent = "Henüz şirket seçilmedi.";
+      }
+      resetContactEmail();
+      setChatCompanyInfo();
+      clearCompanyChat();
+      updateCompanyContactActions();
+    } else if (mode === "company") {
       hide(urlWrap);
-      show(mailWrap);
-      hide(liWrap);
-      hide(langWrap);
+      show(companyWrap);
+      hide(mailWrap);
+      show(langWrap);
+      if ($("companySearch")) $("companySearch").value = "";
+      await loadCompanies();
+      setChatCompanyInfo();
     } else {
       hide(urlWrap);
-      hide(mailWrap);
-      show(liWrap);
-      hide(langWrap);
+      hide(companyWrap);
+      show(mailWrap);
+      show(langWrap);
+      if ($("selectedCompanyId")) $("selectedCompanyId").value = "";
+      currentCompanyId = null;
+      if ($("selectedCompanyText")) {
+        $("selectedCompanyText").textContent = "Henüz şirket seçilmedi.";
+      }
+      setChatCompanyInfo();
+      clearCompanyChat();
+      updateCompanyContactActions();
     }
+
+    updateMailModePlaceholders(mode);
   };
 
   modeInputs.forEach((input) => {
     input.addEventListener("change", () => {
-      const mode = getApplicationMode();
-      applyModeVisibility(mode);
+      applyModeVisibility(getApplicationMode());
     });
   });
+
+  if ($("companySearch")) {
+    $("companySearch").addEventListener("input", () => {
+      if (!companiesLoaded && !companiesLoading) {
+        loadCompanies();
+        return;
+      }
+      renderCompanyList(filterCompaniesBySearch($("companySearch").value));
+    });
+  }
 
   applyModeVisibility(getApplicationMode());
 }
@@ -628,46 +799,63 @@ $("btnGenerate").addEventListener("click", async () => {
 
   const mode = getApplicationMode();
   const url = $("companyUrl").value.trim();
+  const companyId = ($("selectedCompanyId")?.value || "").trim();
   const role = $("targetRole").value.trim();
   const language = $("language").value;
   const companyName = ($("companyName")?.value || "").trim();
   const recipientEmail = ($("recipientEmail")?.value || "").trim();
-  const linkedinRecipient = ($("linkedinRecipientEmail")?.value || "").trim();
   const jobDescription = ($("jobDescription")?.value || "").trim();
-  const mergedInstr = mergedInstructionForApi();
+  const userInstruction = readUserInstruction();
 
   let payload = {};
   let companyDisplay = "";
   let endpoint = "/applications/prepare";
 
-  if (mode === "career_url") {
+  if (mode !== "mail" && !role) {
+    setError("Hedef pozisyon zorunludur.");
+    return;
+  }
+
+  if (mode === "url") {
     if (!url) {
-      setError("Kariyer sayfası URL zorunludur.");
+      setError("Şirket / Kariyer URL zorunludur.");
       return;
     }
-    if (!role) {
-      setError("Hedef pozisyon zorunludur.");
+    const suggestedCvKey = suggestCvFromText(role, jobDescription);
+    syncCvCard(suggestedCvKey);
+    payload = {
+      role,
+      language,
+      url,
+      user_instruction: userInstruction || null,
+      cv_role_type: suggestedCvKey,
+    };
+    companyDisplay = url;
+  } else if (mode === "company") {
+    if (!companyId) {
+      setError("Lütfen kayıtlı bir şirket seçin.");
       return;
     }
 
     payload = {
       role,
       language,
-      url,
-      user_instruction: mergedInstr || null,
+      company_id: companyId,
+      user_instruction: userInstruction || null,
     };
-    companyDisplay = url;
-  } else if (mode === "recruiter_mail") {
-    endpoint = "/companies/generate-application-email";
 
+    const selectedCompany = companies.find((c) => c.id === companyId);
+    companyDisplay =
+      selectedCompany?.name || selectedCompany?.website || companyId;
+  } else {
     if (!companyName && !recipientEmail) {
       setError("Şirket adı veya alıcı e-postasından en az biri dolu olmalı.");
       return;
     }
 
-    if (!companyName && recipientEmail && !mergedInstr) {
+    if (!companyName && recipientEmail && !userInstruction) {
       setError(
-        "Yalnızca alıcı e-postası verildiğinde nasıl yazılacağını kısaca belirtin."
+        "Yalnızca alıcı e-postası verildiğinde mailin nasıl yazılacağını belirtin."
       );
       return;
     }
@@ -677,39 +865,22 @@ $("btnGenerate").addEventListener("click", async () => {
       return;
     }
 
+    endpoint = "/companies/generate-application-email";
+
+    const suggestedCvKey = suggestCvFromText(role, jobDescription);
+    syncCvCard(suggestedCvKey);
+
     payload = {
       company_name: companyName || null,
       position: role || null,
       recipient_email: recipientEmail || null,
-      job_description: null,
-      user_instruction: mergedInstr || null,
-      cv_role_type: activeCvKey(),
+      job_description: jobDescription || null,
+      user_instruction: userInstruction || null,
+      cv_role_type: suggestedCvKey,
+      language: language || "tr",
     };
 
     companyDisplay = companyName || recipientEmail || "Belirtilmedi";
-  } else {
-    endpoint = "/companies/generate-application-email";
-
-    if (!jobDescription) {
-      setError("LinkedIn / ilan metni zorunludur.");
-      return;
-    }
-
-    if (linkedinRecipient && !isValidEmail(linkedinRecipient)) {
-      setError("İsteğe bağlı alıcı e-postası geçerli olmalıdır.");
-      return;
-    }
-
-    payload = {
-      company_name: null,
-      position: role || null,
-      recipient_email: linkedinRecipient || null,
-      job_description: jobDescription || null,
-      user_instruction: mergedInstr || null,
-      cv_role_type: activeCvKey(),
-    };
-
-    companyDisplay = linkedinRecipient || "İlan başvurusu";
   }
 
   setGenerateLoading(true);
@@ -728,8 +899,8 @@ $("btnGenerate").addEventListener("click", async () => {
 
     const data = await res.json();
 
-    if (mode !== "career_url") {
-      applicationId = data.application_id;
+    if (mode === "mail") {
+      applicationId = data.application_id || data.id || null;
       currentCompanyId = data.company_id || null;
       refineSupported = Boolean(applicationId);
 
@@ -739,9 +910,7 @@ $("btnGenerate").addEventListener("click", async () => {
       updatePreview(data.subject, data.body);
 
       const to =
-        (data.recipient_email || "").trim() ||
-        (mode === "linkedin_job" ? linkedinRecipient : recipientEmail) ||
-        "";
+        (data.recipient_email || "").trim() || recipientEmail || "";
 
       setContactEmail(to);
 
@@ -750,12 +919,13 @@ $("btnGenerate").addEventListener("click", async () => {
         companyUrl: "",
         companyName: companyDisplay,
         role: role || "",
-        language: "tr",
+        language: language || "tr",
         cvKey: activeCvKey(),
         contactEmail: to,
         subject: data.subject || "",
         body: data.body || "",
         status: "draft",
+        instruction: userInstruction,
       });
 
       setSuccessText("E-posta başarıyla oluşturuldu.");
@@ -767,7 +937,8 @@ $("btnGenerate").addEventListener("click", async () => {
     }
 
     applicationId = data.application_id;
-    currentCompanyId = data.company_id || null;
+    currentCompanyId =
+      data.company_id || (mode === "company" ? companyId : null);
     refineSupported = Boolean(applicationId);
 
     setChatCompanyInfo();
@@ -778,7 +949,7 @@ $("btnGenerate").addEventListener("click", async () => {
 
     upsertApplicationRecord({
       id: data.application_id,
-      companyUrl: url,
+      companyUrl: mode === "url" ? url : "",
       companyName: companyDisplay,
       role,
       language,
@@ -787,6 +958,7 @@ $("btnGenerate").addEventListener("click", async () => {
       subject: data.subject || "",
       body: data.body || "",
       status: "draft",
+      instruction: userInstruction,
     });
 
     updateCompanyContactActions();
@@ -954,6 +1126,8 @@ syncCvCard("ai_engineer");
 setChatCompanyInfo();
 clearCompanyChat();
 updateCompanyContactActions();
+updateMailModePlaceholders(getApplicationMode());
+loadCompanies().catch(() => {});
 
 if ($("contactEmailInput")) {
   $("contactEmailInput").addEventListener("input", () => {

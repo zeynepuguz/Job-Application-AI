@@ -66,7 +66,8 @@ class ApplicationEmailRequest(BaseModel):
     job_description: Optional[str] = None
     user_instruction: Optional[str] = None
     cv_role_type: Optional[str] = None
-
+    portfolio_url: str | None = None
+    language: str | None = "tr"
 
 class ApplicationEmailResponse(BaseModel):
     id: str

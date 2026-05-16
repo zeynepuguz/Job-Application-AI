@@ -156,11 +156,11 @@
                     <input
                       type="radio"
                       name="applicationMode"
-                      value="career_url"
+                      value="url"
                       checked
                       class="text-primary focus:ring-primary"
                     />
-                    <span class="text-body-sm font-medium">Kariyer URL'si</span>
+                    <span class="text-body-sm font-medium">URL ile yeni şirket</span>
                   </label>
 
                   <label
@@ -169,10 +169,10 @@
                     <input
                       type="radio"
                       name="applicationMode"
-                      value="recruiter_mail"
+                      value="company"
                       class="text-primary focus:ring-primary"
                     />
-                    <span class="text-body-sm font-medium">Şirket / Recruiter maili</span>
+                    <span class="text-body-sm font-medium">Kayıtlı şirket seç</span>
                   </label>
 
                   <label
@@ -181,10 +181,10 @@
                     <input
                       type="radio"
                       name="applicationMode"
-                      value="linkedin_job"
+                      value="mail"
                       class="text-primary focus:ring-primary"
                     />
-                    <span class="text-body-sm font-medium">LinkedIn / İlan metni</span>
+                    <span class="text-body-sm font-medium">Mail / ilan ile üret</span>
                   </label>
                 </div>
               </div>
@@ -194,7 +194,7 @@
                   class="block text-label-md text-on-surface mb-xs"
                   for="companyUrl"
                 >
-                  Kariyer sayfası URL
+                  Şirket / Kariyer URL
                 </label>
 
                 <input
@@ -205,7 +205,52 @@
                 />
               </div>
 
+              <div id="companySelectWrapper" class="hidden space-y-sm">
+                <label
+                  class="block text-label-md text-on-surface mb-xs"
+                  for="companySearch"
+                >
+                  Kayıtlı şirketler
+                </label>
+
+                <input
+                  id="companySearch"
+                  class="w-full px-md py-sm bg-white border border-outline-variant rounded-xl shadow-sm focus:ring-2 focus:ring-primary focus:border-primary transition-all text-body-md"
+                  placeholder="İsterseniz şirket adı, web sitesi veya e-posta ile arayın..."
+                  type="text"
+                />
+
+                <div
+                  id="companyList"
+                  class="max-h-64 overflow-y-auto bg-white border border-outline-variant rounded-xl shadow-sm"
+                >
+                  <div class="p-md text-body-sm text-slate-500">
+                    Şirketler yükleniyor...
+                  </div>
+                </div>
+
+                <input id="selectedCompanyId" type="hidden" />
+
+                <p id="selectedCompanyText" class="text-label-sm text-slate-500">
+                  Henüz şirket seçilmedi.
+                </p>
+              </div>
+
               <div id="mailInputWrapper" class="hidden space-y-md">
+                <label
+                  class="block text-label-md text-on-surface mb-xs"
+                  for="recipientEmail"
+                >
+                  Alıcı e-postası
+                </label>
+
+                <input
+                  id="recipientEmail"
+                  class="w-full px-md py-sm bg-white border border-outline-variant rounded-xl shadow-sm focus:ring-2 focus:ring-primary focus:border-primary transition-all text-body-md"
+                  placeholder="Örn: hiring@company.com"
+                  type="email"
+                />
+
                 <label
                   class="block text-label-md text-on-surface mb-xs"
                   for="companyName"
@@ -222,78 +267,16 @@
 
                 <label
                   class="block text-label-md text-on-surface mb-xs"
-                  for="recipientEmail"
-                >
-                  Alıcı e-postası
-                </label>
-
-                <input
-                  id="recipientEmail"
-                  class="w-full px-md py-sm bg-white border border-outline-variant rounded-xl shadow-sm focus:ring-2 focus:ring-primary focus:border-primary transition-all text-body-md"
-                  placeholder="Örn: hiring@company.com"
-                  type="email"
-                />
-              </div>
-
-              <div id="linkedinJobWrapper" class="hidden space-y-md">
-                <label
-                  class="block text-label-md text-on-surface mb-xs"
                   for="jobDescription"
                 >
-                  LinkedIn / ilan metni
+                  İlan metni / LinkedIn postu (isteğe bağlı)
                 </label>
 
                 <textarea
                   id="jobDescription"
                   class="w-full px-md py-sm bg-white border border-outline-variant rounded-xl shadow-sm focus:ring-2 focus:ring-primary focus:border-primary transition-all text-body-md min-h-[140px]"
-                  placeholder="İlan veya gönderi metnini buraya yapıştırın."
+                  placeholder="LinkedIn veya kariyer sitesindeki ilan metnini buraya yapıştırabilirsiniz."
                   rows="6"
-                ></textarea>
-
-                <label
-                  class="block text-label-md text-on-surface mb-xs"
-                  for="linkedinRecipientEmail"
-                >
-                  Alıcı e-postası (isteğe bağlı)
-                </label>
-
-                <input
-                  id="linkedinRecipientEmail"
-                  class="w-full px-md py-sm bg-white border border-outline-variant rounded-xl shadow-sm focus:ring-2 focus:ring-primary focus:border-primary transition-all text-body-md"
-                  placeholder="Örn: recruiter@company.com"
-                  type="email"
-                />
-              </div>
-
-              <div>
-                <label
-                  class="block text-label-md text-on-surface mb-xs"
-                  for="mailStyleInstruction"
-                >
-                  Mail nasıl yazılsın?
-                </label>
-
-                <textarea
-                  id="mailStyleInstruction"
-                  class="w-full px-md py-sm bg-white border border-outline-variant rounded-xl shadow-sm focus:ring-2 focus:ring-primary focus:border-primary transition-all text-body-md"
-                  placeholder="Örn: Kısa ve direkt yaz · Daha startup tarzı yaz · Resmi ama kısa yaz · Samimi bir outreach maili olsun"
-                  rows="3"
-                ></textarea>
-              </div>
-
-              <div>
-                <label
-                  class="block text-label-md text-on-surface mb-xs"
-                  for="userInstruction"
-                >
-                  Ek talimat (isteğe bağlı)
-                </label>
-
-                <textarea
-                  id="userInstruction"
-                  class="w-full px-md py-sm bg-white border border-outline-variant rounded-xl shadow-sm focus:ring-2 focus:ring-primary focus:border-primary transition-all text-body-md"
-                  placeholder="Başvuru bağlamı, yönlendirme veya ek notlar."
-                  rows="3"
                 ></textarea>
               </div>
 
@@ -308,9 +291,25 @@
                 <input
                   id="targetRole"
                   class="w-full px-md py-sm bg-white border border-outline-variant rounded-xl shadow-sm focus:ring-2 focus:ring-primary focus:border-primary transition-all text-body-md"
-                  placeholder="Ne yazdıysanız aynen kullanılır; otomatik rol tamamlama yoktur."
+                  placeholder="Örn: Backend AI Engineer"
                   type="text"
                 />
+              </div>
+
+              <div>
+                <label
+                  class="block text-label-md text-on-surface mb-xs"
+                  for="userInstruction"
+                >
+                  Mail nasıl yazılsın? / Ek notlar
+                </label>
+
+                <textarea
+                  id="userInstruction"
+                  class="w-full px-md py-sm bg-white border border-outline-variant rounded-xl shadow-sm focus:ring-2 focus:ring-primary focus:border-primary transition-all text-body-md"
+                  placeholder="Örn: Kısa ve direkt yaz · Samimi ama profesyonel bir ton kullan · Backend tecrübemi vurgula"
+                  rows="3"
+                ></textarea>
               </div>
 
               <div id="languageWrapper">

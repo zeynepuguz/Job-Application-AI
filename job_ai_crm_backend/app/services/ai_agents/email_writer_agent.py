@@ -13,6 +13,9 @@ def write_email(
     role,
     strategy,
     user_instruction,
+    job_description=None,
+    recipient_email=None,
+    source=None,
     previous_email=None,
     rewrite_reason=None,
     rewrite_issues=None,
@@ -20,13 +23,17 @@ def write_email(
     memory=None,
     recent_email_patterns=None,
     allowed_experience=None,
+    portfolio_url=None,
+    language=None,
 ):
     full_name = os.getenv("FULL_NAME")
     phone = os.getenv("PHONE_NUMBER")
     email = os.getenv("EMAIL_ADDRESS")
     linkedin = os.getenv("LINKEDIN_URL")
 
-    closing_parts = ["Saygılarımla"]
+    is_english = str(language or "tr").lower() in ["en", "english"]
+
+    closing_parts = ["Best regards," if is_english else "Saygılarımla"]
 
     if full_name:
         closing_parts.append(full_name)
@@ -54,7 +61,9 @@ def write_email(
     style = (strategy or {}).get("style", "neutral")
 
     prompt = f"""
-Write a short, natural Turkish job application / outreach email.
+CRITICAL: Write the ENTIRE email in this language: {language or "tr"} (tr=Turkish, en=English). No exceptions.
+
+Write a short, natural job application / outreach email.
 
 Return ONLY the email body.
 Do not include subject.
@@ -66,8 +75,20 @@ Company:
 Role:
 {role or "Not specified"}
 
+Recipient Email:
+{recipient_email or "Not specified"}
+
+Source:
+{source or "Not specified"}
+
+Job Description / Job Post:
+{job_description or "Not specified"}
+
 User Instruction:
 {user_instruction or "None"}
+
+Portfolio URL:
+{portfolio_url or "Not provided"}
 
 Email Strategy:
 {json.dumps(strategy or {}, ensure_ascii=False)}
@@ -93,8 +114,17 @@ Recent Email Patterns:
 ALLOWED EXPERIENCE ONLY:
 {json.dumps(allowed_experience or [], ensure_ascii=False)}
 
+Target Language:
+{language or "tr"}
+
+PORTFOLIO RULES:
+- If Portfolio URL is "Not provided", do NOT mention portfolio, personal website, or GitHub showcase links.
+- If Portfolio URL is provided, you MUST include it naturally in the email. Do not skip it.
+- Never generate fake portfolio URLs.
+- Never use placeholders like [portfolio link].
+
 CORE RULES:
-- Write in Turkish.
+- Use the requested language.
 - Keep it short.
 - Maximum {word_limit} words.
 - Sound like a real person.
@@ -128,11 +158,26 @@ STYLE RULES:
 - If confidence_score is low, keep wording neutral and safe.
 - Avoid repeating openings from Recent Email Patterns.
 
+JOB POST PERSONALIZATION RULES:
+- If Job Description / Job Post is provided, customize the email to that post.
+- You may mention the role, company context, industry, hiring context, and application channel from the job post.
+- Do NOT turn job post requirements into user experience.
+- Do NOT claim the user has LLM, AI, defense, Python, research, engineering or portfolio experience unless explicitly provided in ALLOWED EXPERIENCE ONLY.
+- If user asks to include portfolio but no portfolio URL is provided, do NOT add a placeholder.
+
+JOB DESCRIPTION USAGE RULES:
+- If Job Description / Job Post is provided, you MUST use it.
+- Detect the hiring domain from the posting.
+- Mention the domain naturally in 1 short sentence.
+- Do not summarize the full post.
+- If the post mentions LLM, AI, defense technologies, autonomous systems or mission-critical operations, mention that context naturally.
+- Do not claim the user has experience in those areas unless it appears in ALLOWED EXPERIENCE ONLY.
+
 REWRITE RULES:
 - If Previous Email exists, rewrite it by fixing Rewrite Issues.
 - If issue type includes hallucinated_experience, remove all unsupported experience claims.
 - If issue type includes cv_summary, make it shorter and outreach-like.
-- If issue type includes ai_tone or robotic_tone, use simpler Turkish.
+- If issue type includes ai_tone or robotic_tone, use simpler, more natural language (keep the same Target Language).
 - If issue type includes too_long, shorten aggressively.
 
 FORBIDDEN:
@@ -148,6 +193,15 @@ FORBIDDEN:
 - Do not say "projeler geliştirdim" unless explicitly allowed.
 - Do not say "Python üzerinde çalışıyorum" unless explicitly allowed.
 - Do not say "bilgi sahibiyim" unless explicitly allowed.
+- Do not say "Detayları görüşmek için uygun bir zaman ayarlayabilir miyiz?"
+- Do not say "pozisyonu ile ilgileniyorum" as the main sentence.
+- Do not write generic one-line emails when a job post is provided.
+
+LANGUAGE RULES:
+- If Target Language is "en" or "English", write the entire email in English.
+- If Target Language is "tr" or "Turkish", write the entire email in Turkish.
+- Never mix Turkish and English.
+- Use English closing if Target Language is English.
 
 End EXACTLY with:
 
@@ -172,7 +226,7 @@ End EXACTLY with:
             {
                 "role": "system",
                 "content": (
-                    "You write short, realistic Turkish job application emails. "
+                    "You write short, realistic job application emails in the requested language. "
                     "You only use information explicitly provided by the user. "
                     "You never infer skills, technologies, projects or experience from a role title."
                 )
@@ -185,3 +239,38 @@ End EXACTLY with:
     )
 
     return response.choices[0].message.content.strip()
+
+def generate_email_subject(
+    company_name=None,
+    role=None,
+    job_description=None,
+    user_instruction=None,
+    language=None,
+    job_analysis=None,
+    email_body=None,
+):
+    is_english = str(language or "tr").lower() in ["en", "english"]
+    text = (job_description or "").lower()
+
+    if "llm researcher" in text or "llm researchers" in text:
+        subject = (
+            "LLM Researcher / Engineer Application"
+            if is_english
+            else "LLM Researcher / Engineer Başvurusu"
+        )
+    elif "part-time" in text and "llm" in text:
+        subject = (
+            "Part-Time LLM Application"
+            if is_english
+            else "Part-Time LLM Başvurusu"
+        )
+    elif role:
+        subject = (
+            f"{role} Application"
+            if is_english
+            else f"{role} Başvurusu"
+        )
+    else:
+        subject = "Job Application" if is_english else "İş Başvurusu"
+
+    return subject[:45]

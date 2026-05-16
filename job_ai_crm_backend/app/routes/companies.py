@@ -1,7 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException
+from httpcore import request
 from app.models.generated_email import GeneratedEmail
 from app.services.email_history import get_recent_email_patterns
 from sqlalchemy.orm import Session
+from sqlalchemy import func
+from sqlalchemy.exc import IntegrityError
+
 import re
 import json
 
@@ -30,6 +34,7 @@ from app.services.ai_analyzer import analyze_with_ai, generate_manual_email
 from app.services.vector_store import upsert_company_text
 from app.services.company_chat import answer_company_question
 from app.services.ai_agents.orchestrator import generate_agentic_email
+from app.services.ai_agents.portfolio_utils import resolve_portfolio_url
 from app.services.user_ai_memory import get_or_create_ai_preferences
 
 router = APIRouter(
@@ -285,6 +290,14 @@ def generate_application_email(
         limit=5,
     )
 
+    portfolio_url = resolve_portfolio_url(
+        request.portfolio_url,
+        request.job_description,
+        request.user_instruction,
+    )
+
+    mail_language = (request.language or "tr").strip() or "tr"
+
     agent_result = generate_agentic_email(
         company_name=company_name or None,
         role=request.position,
@@ -293,14 +306,13 @@ def generate_application_email(
         memory=memory_payload,
         recipient_email=request.recipient_email,
         recent_email_patterns=recent_email_patterns,
+        portfolio_url=portfolio_url,
+        language=mail_language,
     )
 
     email_body = agent_result["body"]
-
-    subject = (
-        f"{request.position} Başvurusu"
-        if request.position
-        else "İş Başvurusu"
+    subject = (agent_result.get("subject") or "").strip() or (
+        "Job Application" if mail_language.lower() in ("en", "english") else "İş Başvurusu"
     )
 
     role_key = (request.cv_role_type or "ai_engineer").strip()
@@ -321,16 +333,54 @@ def generate_application_email(
 
     display_name = (company_name or "İş başvurusu")[:255] or "İş başvurusu"
 
-    rec = str(request.recipient_email) if request.recipient_email else None
-
-    company_row = Company(
-        name=display_name,
-        website=None,
-        contact_email=rec,
-        notes="generate-application-email",
+    recipient_email = (
+        str(request.recipient_email).strip().lower()
+        if request.recipient_email
+        else None
     )
-    db.add(company_row)
-    db.flush()
+
+    company_row = None
+
+    if recipient_email:
+        company_row = (
+            db.query(Company)
+            .filter(func.lower(func.trim(Company.contact_email)) == recipient_email)
+            .first()
+        )
+
+    if not company_row and company_name:
+        company_row = (
+            db.query(Company)
+            .filter(func.lower(func.trim(Company.name)) == company_name.strip().lower())
+            .first()
+        )
+
+    if not company_row:
+        company_row = Company(
+            name=display_name,
+            website=None,
+            contact_email=recipient_email,
+            notes="generate-application-email",
+        )
+        db.add(company_row)
+
+        try:
+            db.flush()
+        except IntegrityError:
+            db.rollback()
+
+            if recipient_email:
+                company_row = (
+                    db.query(Company)
+                    .filter(func.lower(func.trim(Company.contact_email)) == recipient_email)
+                    .first()
+                )
+
+            if not company_row:
+                raise HTTPException(
+                    status_code=409,
+                    detail="Bu e-posta ile kayıtlı şirket zaten var ama mevcut kayıt okunamadı."
+                )
 
     application_row = Application(
         company_id=company_row.id,
@@ -348,7 +398,7 @@ def generate_application_email(
         subject=subject,
         body=email_body,
         tone="natural",
-        language="tr",
+        language=mail_language,
         status="draft",
 
         strategy=agent_result.get("strategy"),
@@ -369,5 +419,5 @@ def generate_application_email(
         company_id=str(company_row.id),
         subject=generated_email.subject,
         body=generated_email.body,
-        recipient_email=rec,
+        recipient_email=recipient_email,
     )

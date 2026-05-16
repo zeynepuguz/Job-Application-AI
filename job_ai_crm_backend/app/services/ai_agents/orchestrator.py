@@ -1,6 +1,6 @@
 from app.services.ai_agents.job_analyzer import analyze_job
 from app.services.ai_agents.email_strategy_agent import build_email_strategy
-from app.services.ai_agents.email_writer_agent import write_email
+from app.services.ai_agents.email_writer_agent import write_email, generate_email_subject
 from app.services.ai_agents.email_reviewer_agent import review_email
 
 
@@ -44,6 +44,8 @@ def generate_agentic_email(
     recipient_email=None,
     source=None,
     recent_email_patterns=None,
+    portfolio_url=None,
+    language=None,
 ):
     allowed_experience = extract_allowed_experience(user_instruction)
 
@@ -61,6 +63,7 @@ def generate_agentic_email(
         "source": source,
         "job_analysis": job_analysis,
         "allowed_experience": allowed_experience,
+        "language": language,
     }
 
     strategy = build_email_strategy(
@@ -73,12 +76,17 @@ def generate_agentic_email(
         role=role,
         strategy=strategy,
         user_instruction=user_instruction,
+        job_description=job_description,
+        recipient_email=recipient_email,
+        source=source,
         memory=memory,
         recent_email_patterns=recent_email_patterns,
         allowed_experience=allowed_experience,
+        portfolio_url=portfolio_url,
+        language=language,
     )
 
-    review = review_email(email_body)
+    review = review_email(email_body, language=language)
 
     rewrite_count = 0
     max_retries = 3
@@ -91,6 +99,9 @@ def generate_agentic_email(
             role=role,
             strategy=strategy,
             user_instruction=user_instruction,
+            job_description=job_description,
+            recipient_email=recipient_email,
+            source=source,
             previous_email=email_body,
             rewrite_reason=review.get("rewrite_reason")
             or "Email quality score was low.",
@@ -99,9 +110,21 @@ def generate_agentic_email(
             memory=memory,
             recent_email_patterns=recent_email_patterns,
             allowed_experience=allowed_experience,
+            portfolio_url=portfolio_url,
+            language=language,
         )
 
-        review = review_email(email_body)
+        review = review_email(email_body, language=language)
+
+    subject = generate_email_subject(
+        company_name=company_name,
+        role=role,
+        job_description=job_description,
+        user_instruction=user_instruction,
+        language=language,
+        job_analysis=job_analysis,
+        email_body=email_body,
+    )
 
     return {
         "job_analysis": job_analysis,
@@ -109,4 +132,5 @@ def generate_agentic_email(
         "review": review,
         "rewrite_count": rewrite_count,
         "body": email_body,
+        "subject": subject,
     }

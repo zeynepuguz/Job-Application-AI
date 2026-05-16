@@ -8,9 +8,9 @@ load_dotenv()
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 
-def review_email(email_text: str) -> dict:
+def review_email(email_text: str, language: str | None = None) -> dict:
     prompt = f"""
-You are reviewing a Turkish job application email.
+You are reviewing a {language or 'Turkish'} job application email.
 
 Your job is to evaluate whether this email feels:
 - natural
@@ -80,6 +80,13 @@ IMPORTANT:
 - Prefer rewrite if it is longer than necessary.
 - Do not approve emails with cliché wording.
 - Do not approve emails that feel like a template.
+
+Target Language:
+{language or "tr"}
+
+Review the email in the target language.
+If Target Language is "en", do NOT expect Turkish.
+If Target Language is "en", flag rewrite_needed=true if Turkish sentences appear.
 
 Possible issue_types:
 - ai_tone
