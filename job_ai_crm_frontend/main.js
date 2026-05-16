@@ -1078,14 +1078,21 @@ $("btnSend").addEventListener("click", async () => {
   setSendButtonSpinner(true);
 
   try {
+    const formData = new FormData();
+    const subjectVal = ($("emailSubject")?.value || "").trim();
+    const bodyVal = ($("emailBody")?.value || "").trim();
+    if (subjectVal) formData.append("subject", subjectVal);
+    if (bodyVal) formData.append("body", bodyVal);
+    if (to) formData.append("to_email", to);
+
+    const extraFileInput = $("extraAttachment");
+    if (extraFileInput?.files?.[0]) {
+      formData.append("extra_file", extraFileInput.files[0]);
+    }
+
     const res = await fetch(`/applications/${applicationId}/send`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        subject: ($("emailSubject")?.value || "").trim() || null,
-        body: ($("emailBody")?.value || "").trim() || null,
-        to_email: to || null,
-      }),
+      body: formData,
     });
 
     if (!res.ok) {

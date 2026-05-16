@@ -30,11 +30,19 @@ function formatDate(iso) {
   }).format(date);
 }
 
+const STATUS_CONFIG = {
+  draft:     { label: "Taslak",            cls: "bg-slate-100 text-slate-600 border-slate-200" },
+  sent:      { label: "Gönderildi",        cls: "bg-blue-100 text-blue-700 border-blue-200" },
+  waiting:   { label: "Yanıt Bekleniyor",  cls: "bg-amber-100 text-amber-700 border-amber-200" },
+  replied:   { label: "Yanıt Geldi",       cls: "bg-purple-100 text-purple-700 border-purple-200" },
+  interview: { label: "Mülakat",           cls: "bg-indigo-100 text-indigo-700 border-indigo-200" },
+  offer:     { label: "Teklif",            cls: "bg-green-100 text-green-700 border-green-200" },
+  rejected:  { label: "Red",               cls: "bg-red-100 text-red-600 border-red-200" },
+};
+
 function statusBadge(status) {
-  if (status === "sent") {
-    return '<span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-700 border border-green-200">Gönderildi</span>';
-  }
-  return '<span class="px-2 py-1 text-xs rounded-full bg-amber-100 text-amber-700 border border-amber-200">Taslak</span>';
+  const cfg = STATUS_CONFIG[status] || STATUS_CONFIG.draft;
+  return `<span class="px-2 py-1 text-xs rounded-full border ${cfg.cls}">${cfg.label}</span>`;
 }
 
 function renderStats(items) {
@@ -67,6 +75,11 @@ function renderList(items) {
       const hasBody = Boolean(item.body && item.body.trim());
       const detailId = `detay-${item.id}`;
 
+      const statusOptions = Object.entries(STATUS_CONFIG)
+        .filter(([k]) => k !== "draft")
+        .map(([k, v]) => `<option value="${k}" ${item.status === k ? "selected" : ""}>${v.label}</option>`)
+        .join("");
+
       return `
         <article class="border border-slate-200 rounded-xl p-4 hover:shadow-sm transition-shadow bg-white">
           <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
@@ -78,7 +91,6 @@ function renderList(items) {
               <h3 class="font-semibold text-slate-900 truncate">${subject}</h3>
               <p class="text-sm text-slate-600 truncate"><span class="font-medium">Şirket:</span> ${company}</p>
               <p class="text-sm text-slate-600 truncate"><span class="font-medium">Pozisyon:</span> ${role}</p>
-              <p class="text-sm text-slate-600 truncate"><span class="font-medium">Konu:</span> ${subject}</p>
             </div>
             <div class="text-sm text-slate-600 space-y-1 md:text-right">
               <p><span class="font-medium">CV:</span> ${cvLabel}</p>
@@ -91,6 +103,22 @@ function renderList(items) {
               }
             </div>
           </div>
+
+          <div class="mt-3 pt-3 border-t border-slate-200 flex flex-col gap-2">
+            <div class="flex items-center gap-2 flex-wrap">
+              <select data-app-id="${item.id}" class="status-select text-xs border border-slate-300 rounded-md px-2 py-1 bg-white">
+                ${statusOptions}
+              </select>
+              <input type="text" data-notes-id="${item.id}" placeholder="Not ekle..." value="${item.notes || ""}"
+                class="notes-input flex-1 text-xs border border-slate-300 rounded-md px-2 py-1 min-w-0" />
+              <button type="button" data-save-id="${item.id}"
+                class="px-3 py-1 text-xs rounded-md bg-slate-800 text-white hover:bg-slate-700">
+                Kaydet
+              </button>
+            </div>
+            ${item.notes ? `<p class="text-xs text-slate-500 italic">${item.notes}</p>` : ""}
+          </div>
+
           ${
             hasBody
               ? `<div id="${detailId}" class="hidden mt-3 pt-3 border-t border-slate-200">
@@ -111,6 +139,33 @@ function renderList(items) {
       if (!panel) return;
       const isHidden = panel.classList.toggle("hidden");
       btn.textContent = isHidden ? "İçeriği Gör" : "İçeriği Gizle";
+    });
+  });
+
+  list.querySelectorAll("[data-save-id]").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const appId = btn.getAttribute("data-save-id");
+      const select = list.querySelector(`[data-app-id="${appId}"]`);
+      const notesInput = list.querySelector(`[data-notes-id="${appId}"]`);
+      const status = select?.value;
+      const notes = notesInput?.value?.trim() || null;
+
+      btn.disabled = true;
+      btn.textContent = "...";
+
+      try {
+        const res = await fetch(`/applications/${appId}/status`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status, notes }),
+        });
+        if (!res.ok) throw new Error();
+        btn.textContent = "✓";
+        setTimeout(() => { btn.textContent = "Kaydet"; btn.disabled = false; }, 1500);
+      } catch {
+        btn.textContent = "Hata";
+        setTimeout(() => { btn.textContent = "Kaydet"; btn.disabled = false; }, 1500);
+      }
     });
   });
 }

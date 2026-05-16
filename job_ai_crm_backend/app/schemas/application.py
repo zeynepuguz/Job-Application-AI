@@ -70,3 +70,17 @@ class UpdateContactEmailResponse(BaseModel):
     company_id: UUID
     contact_email: str
 
+
+VALID_STATUSES = {"sent", "waiting", "replied", "interview", "offer", "rejected"}
+
+
+class ApplicationStatusUpdateRequest(BaseModel):
+    status: str
+    notes: str | None = None
+
+
+class ApplicationStatusUpdateResponse(BaseModel):
+    application_id: UUID
+    status: str
+    notes: str | None
+

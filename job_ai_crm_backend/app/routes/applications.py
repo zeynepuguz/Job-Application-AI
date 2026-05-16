@@ -1,8 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException, Body
+from fastapi import APIRouter, Depends, HTTPException, Body, UploadFile, File, Form
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 import os
 import re
+import tempfile
+import shutil
 
 from app.database import get_db
 from app.models.company import Company
@@ -19,7 +21,10 @@ from app.schemas.application import (
     SendApplicationResponse,
     SentApplicationsResponse,
     UpdateContactEmailRequest,
-    UpdateContactEmailResponse
+    UpdateContactEmailResponse,
+    ApplicationStatusUpdateRequest,
+    ApplicationStatusUpdateResponse,
+    VALID_STATUSES,
 )
 
 from app.services.url_analyzer import (
@@ -330,7 +335,10 @@ def refine_application_email(
 @router.post("/{application_id}/send", response_model=SendApplicationResponse)
 def send_application(
     application_id: str,
-    payload: SendApplicationRequest = Body(default_factory=SendApplicationRequest),
+    subject: str | None = Form(default=None),
+    body: str | None = Form(default=None),
+    to_email: str | None = Form(default=None),
+    extra_file: UploadFile | None = File(default=None),
     db: Session = Depends(get_db)
 ):
     application = (
@@ -366,19 +374,19 @@ def send_application(
             detail="This application has already been sent"
         )
 
-    if payload.subject is not None and payload.subject.strip():
-        generated_email.subject = payload.subject.strip()
+    if subject and subject.strip():
+        generated_email.subject = subject.strip()
 
-    if payload.body is not None and payload.body.strip():
-        generated_email.body = payload.body.strip()
+    if body and body.strip():
+        generated_email.body = body.strip()
 
-    to_email = None
-    if payload.to_email and str(payload.to_email).strip():
-        to_email = str(payload.to_email).strip()
+    resolved_to = None
+    if to_email and str(to_email).strip():
+        resolved_to = str(to_email).strip()
     elif company.contact_email:
-        to_email = str(company.contact_email).strip()
+        resolved_to = str(company.contact_email).strip()
 
-    if not to_email:
+    if not resolved_to:
         raise HTTPException(
             status_code=400,
             detail="Alıcı e-postası bulunamadı. Önizlemede alıcı alanını doldurun veya şirket kaydına iletişim ekleyin."
@@ -386,18 +394,30 @@ def send_application(
 
     cv_path = choose_cv_file_path(application.role_type)
 
+    extra_path = None
+    tmp_dir = None
+    if extra_file and extra_file.filename:
+        tmp_dir = tempfile.mkdtemp()
+        extra_path = os.path.join(tmp_dir, extra_file.filename)
+        with open(extra_path, "wb") as f:
+            shutil.copyfileobj(extra_file.file, f)
+
     try:
         send_real_email(
-            to_email=to_email,
+            to_email=resolved_to,
             subject=generated_email.subject,
             body=generated_email.body,
-            cv_path=cv_path
+            cv_path=cv_path,
+            extra_attachment_path=extra_path,
         )
     except Exception as e:
         raise HTTPException(
             status_code=500,
             detail=f"Email could not be sent: {str(e)}"
         )
+    finally:
+        if tmp_dir:
+            shutil.rmtree(tmp_dir, ignore_errors=True)
 
     application.status = "sent"
     generated_email.status = "sent"
@@ -416,6 +436,40 @@ def send_application(
         "generated_email_id": generated_email.id,
         "status": "sent",
         "message": "Email sent successfully and saved"
+    }
+
+
+@router.patch("/{application_id}/status", response_model=ApplicationStatusUpdateResponse)
+def update_application_status(
+    application_id: str,
+    request: ApplicationStatusUpdateRequest,
+    db: Session = Depends(get_db)
+):
+    if request.status not in VALID_STATUSES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Geçersiz durum. Geçerli değerler: {', '.join(VALID_STATUSES)}"
+        )
+
+    application = (
+        db.query(Application)
+        .filter(Application.id == application_id)
+        .first()
+    )
+    if not application:
+        raise HTTPException(status_code=404, detail="Application not found")
+
+    application.status = request.status
+    if request.notes is not None:
+        application.notes = request.notes
+
+    db.commit()
+    db.refresh(application)
+
+    return {
+        "application_id": application.id,
+        "status": application.status,
+        "notes": application.notes,
     }
 
 
