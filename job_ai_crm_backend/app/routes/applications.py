@@ -33,6 +33,7 @@ from app.services.email_refiner import refine_email
 from app.services.mail_sender import send_real_email
 from app.services.vector_store import upsert_company_text, search_company_context
 from app.services.company_chat import answer_company_question
+from app.services.user_learning import learn_from_sent_email, learn_from_refine_instruction
 router = APIRouter(
     prefix="/applications",
     tags=["Applications"]
@@ -312,6 +313,11 @@ def refine_application_email(
     db.refresh(generated_email)
     db.refresh(application)
 
+    try:
+        learn_from_refine_instruction(db, request.instruction)
+    except Exception:
+        pass
+
     return {
         "application_id": application.id,
         "generated_email_id": generated_email.id,
@@ -399,6 +405,11 @@ def send_application(
     db.commit()
     db.refresh(application)
     db.refresh(generated_email)
+
+    try:
+        learn_from_sent_email(db, generated_email)
+    except Exception:
+        pass
 
     return {
         "application_id": application.id,

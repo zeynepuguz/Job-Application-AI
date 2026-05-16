@@ -37,6 +37,7 @@ def update_ai_preferences(
     email_length: str | None = None,
     preferred_focus: str | None = None,
     avoid_phrases: list[str] | None = None,
+    preferred_language: str | None = None,
 ):
     preference = get_or_create_ai_preferences(db)
 
@@ -51,6 +52,9 @@ def update_ai_preferences(
 
     if avoid_phrases is not None:
         preference.avoid_phrases = avoid_phrases
+
+    if preferred_language:
+        preference.preferred_language = preferred_language
 
     db.commit()
     db.refresh(preference)
