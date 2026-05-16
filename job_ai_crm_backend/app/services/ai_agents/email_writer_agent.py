@@ -30,6 +30,7 @@ def write_email(
     phone = os.getenv("PHONE_NUMBER")
     email = os.getenv("EMAIL_ADDRESS")
     linkedin = os.getenv("LINKEDIN_URL")
+    github = os.getenv("GITHUB_URL")
 
     is_english = str(language or "tr").lower() in ["en", "english"]
 
@@ -43,6 +44,8 @@ def write_email(
         closing_parts.append(email)
     if linkedin:
         closing_parts.append(linkedin)
+    if github:
+        closing_parts.append(github)
 
     closing = "\n".join(closing_parts)
 
@@ -55,7 +58,7 @@ def write_email(
     elif max_length == "short":
         word_limit = 100
     elif max_length == "medium":
-        word_limit = 140
+        word_limit = 100
 
     email_type = (strategy or {}).get("email_type", "cold_outreach")
     style = (strategy or {}).get("style", "neutral")
@@ -90,6 +93,9 @@ User Instruction:
 Portfolio URL:
 {portfolio_url or "Not provided"}
 
+GitHub URL:
+{github or "Not provided"}
+
 Email Strategy:
 {json.dumps(strategy or {}, ensure_ascii=False)}
 
@@ -117,10 +123,12 @@ ALLOWED EXPERIENCE ONLY:
 Target Language:
 {language or "tr"}
 
-PORTFOLIO RULES:
-- If Portfolio URL is "Not provided", do NOT mention portfolio, personal website, or GitHub showcase links.
-- If Portfolio URL is provided, you MUST include it naturally in the email. Do not skip it.
-- Never generate fake portfolio URLs.
+PORTFOLIO / GITHUB RULES:
+- If both Portfolio URL and GitHub URL are "Not provided", do NOT mention portfolio, personal website, or GitHub links.
+- If Portfolio URL is provided, you MUST include it naturally in the email body. Embed it in a sentence. Good examples: "Çalışmalarıma [url] adresinden ulaşabilirsiniz." / "You can find my work at [url]."
+- If GitHub URL is provided and the role is technical, you may include it naturally alongside or instead of portfolio.
+- Do NOT write links as labels like "Portföyüm için web adresim:" or "GitHub:". Always embed in a natural sentence.
+- Never generate fake URLs.
 - Never use placeholders like [portfolio link].
 
 CORE RULES:
@@ -138,6 +146,7 @@ CORE RULES:
 
 STRICT EXPERIENCE RULES:
 - You may ONLY mention technologies, skills, projects, tools, experience or achievements that appear in ALLOWED EXPERIENCE ONLY.
+- If ALLOWED EXPERIENCE ONLY is NOT empty, you MUST naturally mention 1-2 specific and relevant skills or technologies from it in the email body. Do not skip them.
 - If ALLOWED EXPERIENCE ONLY is empty, do not mention any technology, skill, project, tool, experience, achievement, expertise or knowledge level.
 - The role title is NOT evidence of experience.
 - The job description is NOT evidence of user qualifications.
@@ -194,6 +203,8 @@ FORBIDDEN:
 - Do not say "Python üzerinde çalışıyorum" unless explicitly allowed.
 - Do not say "bilgi sahibiyim" unless explicitly allowed.
 - Do not say "Detayları görüşmek için uygun bir zaman ayarlayabilir miyiz?"
+- Do not say "Görüşmek için uygun bir zaman ayarlayabilir miyiz?"
+- Do not end the email with a meeting request sentence. End with a simple, direct close.
 - Do not say "pozisyonu ile ilgileniyorum" as the main sentence.
 - Do not write generic one-line emails when a job post is provided.
 

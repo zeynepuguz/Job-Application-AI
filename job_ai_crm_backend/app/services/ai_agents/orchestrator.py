@@ -2,6 +2,7 @@ from app.services.ai_agents.job_analyzer import analyze_job
 from app.services.ai_agents.email_strategy_agent import build_email_strategy
 from app.services.ai_agents.email_writer_agent import write_email, generate_email_subject
 from app.services.ai_agents.email_reviewer_agent import review_email
+from app.services.ai_agents.cv_experience_extractor import extract_experience_from_cv
 
 
 def should_rewrite(review: dict) -> bool:
@@ -28,13 +29,6 @@ def should_rewrite(review: dict) -> bool:
     return False
 
 
-def extract_allowed_experience(user_instruction: str | None) -> list[str]:
-    if not user_instruction:
-        return []
-
-    return [user_instruction.strip()]
-
-
 def generate_agentic_email(
     company_name,
     role,
@@ -46,8 +40,9 @@ def generate_agentic_email(
     recent_email_patterns=None,
     portfolio_url=None,
     language=None,
+    cv_text=None,
 ):
-    allowed_experience = extract_allowed_experience(user_instruction)
+    allowed_experience = extract_experience_from_cv(cv_text, role, job_description)
 
     job_analysis = analyze_job(
         role=role,

@@ -298,23 +298,6 @@ def generate_application_email(
 
     mail_language = (request.language or "tr").strip() or "tr"
 
-    agent_result = generate_agentic_email(
-        company_name=company_name or None,
-        role=request.position,
-        job_description=request.job_description,
-        user_instruction=request.user_instruction,
-        memory=memory_payload,
-        recipient_email=request.recipient_email,
-        recent_email_patterns=recent_email_patterns,
-        portfolio_url=portfolio_url,
-        language=mail_language,
-    )
-
-    email_body = agent_result["body"]
-    subject = (agent_result.get("subject") or "").strip() or (
-        "Job Application" if mail_language.lower() in ("en", "english") else "İş Başvurusu"
-    )
-
     role_key = (request.cv_role_type or "ai_engineer").strip()
     if role_key not in ("ai_engineer", "backend_ai_engineer"):
         role_key = "ai_engineer"
@@ -330,6 +313,24 @@ def generate_application_email(
             status_code=404,
             detail=f"Aktif CV bulunamadı: {role_key}",
         )
+
+    agent_result = generate_agentic_email(
+        company_name=company_name or None,
+        role=request.position,
+        job_description=request.job_description,
+        user_instruction=request.user_instruction,
+        memory=memory_payload,
+        recipient_email=request.recipient_email,
+        recent_email_patterns=recent_email_patterns,
+        portfolio_url=portfolio_url,
+        language=mail_language,
+        cv_text=cv.content_text if cv else None,
+    )
+
+    email_body = agent_result["body"]
+    subject = (agent_result.get("subject") or "").strip() or (
+        "Job Application" if mail_language.lower() in ("en", "english") else "İş Başvurusu"
+    )
 
     display_name = (company_name or "İş başvurusu")[:255] or "İş başvurusu"
 
