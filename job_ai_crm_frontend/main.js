@@ -95,6 +95,76 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // CV modal
+  const cvSettingsBtn = $("cvSettingsBtn");
+  const cvModal = $("cvModal");
+  const cvModalClose = $("cvModalClose");
+  const cvUploadBtn = $("cvUploadBtn");
+  const cvUploadMsg = $("cvUploadMsg");
+
+  async function loadCvList() {
+    const listEl = $("cvList");
+    try {
+      const res = await authFetch("/profile/cvs");
+      const cvs = await res.json();
+      if (!cvs.length) { listEl.textContent = "Henüz CV yüklenmedi."; return; }
+      listEl.innerHTML = cvs.map(cv =>
+        `<div class="flex items-center justify-between bg-slate-50 rounded-lg px-3 py-2">
+          <span>${cv.title} <span class="text-xs text-slate-400">(${cv.role_type})</span></span>
+          ${cv.is_active ? '<span class="text-xs text-green-600 font-medium">Aktif</span>' : ''}
+        </div>`
+      ).join("");
+    } catch { listEl.textContent = "CV listesi alınamadı."; }
+  }
+
+  if (cvSettingsBtn && cvModal) {
+    cvSettingsBtn.addEventListener("click", () => {
+      cvModal.classList.remove("hidden");
+      cvModal.classList.add("flex");
+      loadCvList();
+    });
+    cvModalClose?.addEventListener("click", () => {
+      cvModal.classList.add("hidden");
+      cvModal.classList.remove("flex");
+    });
+    cvModal.addEventListener("click", (e) => {
+      if (e.target === cvModal) { cvModal.classList.add("hidden"); cvModal.classList.remove("flex"); }
+    });
+  }
+
+  if (cvUploadBtn) {
+    cvUploadBtn.addEventListener("click", async () => {
+      const roleType = $("cvRoleType")?.value;
+      const title = $("cvTitle")?.value?.trim();
+      const file = $("cvFileInput")?.files?.[0];
+      if (!file || !title) { showCvMsg("Başlık ve PDF dosyası gerekli.", "red"); return; }
+
+      cvUploadBtn.disabled = true;
+      cvUploadBtn.textContent = "Yükleniyor...";
+      const form = new FormData();
+      form.append("role_type", roleType);
+      form.append("title", title);
+      form.append("file", file);
+      try {
+        const res = await authFetch("/profile/cvs", { method: "POST", body: form });
+        const data = await res.json();
+        if (!res.ok) { showCvMsg(data.detail || "Hata.", "red"); return; }
+        showCvMsg(`Yüklendi (${data.chars} karakter)`, "green");
+        loadCvList();
+      } catch { showCvMsg("Yükleme başarısız.", "red"); }
+      finally { cvUploadBtn.disabled = false; cvUploadBtn.textContent = "Yükle"; }
+    });
+  }
+
+  function showCvMsg(msg, color) {
+    const el = cvUploadMsg;
+    if (!el) return;
+    el.textContent = msg;
+    el.className = `text-xs text-center ${color === "green" ? "text-green-600" : "text-red-600"}`;
+    el.classList.remove("hidden");
+    setTimeout(() => el.classList.add("hidden"), 4000);
+  }
+
   const loginBtn = $("loginBtn");
   const loginPassword = $("loginPassword");
   const loginError = $("loginError");
