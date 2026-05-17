@@ -49,6 +49,9 @@ def send_real_email(
         with open(extra_attachment_path, "rb") as f:
             _attach_bytes(msg, f.read(), os.path.basename(extra_attachment_path))
 
-    with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=30) as smtp:
+    with smtplib.SMTP("smtp.gmail.com", 587, timeout=30) as smtp:
+        smtp.ehlo()
+        smtp.starttls()
+        smtp.ehlo()
         smtp.login(smtp_email, smtp_password)
         smtp.send_message(msg)
