@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 
 load_dotenv(Path(__file__).resolve().parents[1] / ".env")
 
+import os
 import re
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
@@ -118,9 +119,47 @@ def cleanup_duplicate_companies_by_email() -> None:
         db.close()
 
 
+def seed_cvs_from_files() -> None:
+    """CVs/ klasöründeki PDF'leri okur, DB'de kaydı yoksa oluşturur."""
+    from app.models.cv import CV as CVModel
+    try:
+        from pypdf import PdfReader
+    except ImportError:
+        return
+
+    cv_map = {
+        "ai_engineer": os.getenv("AI_ENGINEER_CV_PATH"),
+        "backend_ai_engineer": os.getenv("BACKEND_AI_ENGINEER_CV_PATH"),
+    }
+
+    db = SessionLocal()
+    try:
+        for role_type, path in cv_map.items():
+            if not path or not Path(path).exists():
+                continue
+            exists = db.query(CVModel).filter(
+                CVModel.role_type == role_type,
+                CVModel.is_active == True,
+            ).first()
+            if exists:
+                continue
+            reader = PdfReader(path)
+            text = "\n".join(p.extract_text() or "" for p in reader.pages)
+            if not text.strip():
+                continue
+            title = Path(path).stem.replace("_", " ")
+            db.add(CVModel(title=title, role_type=role_type, content_text=text, is_active=True))
+        db.commit()
+    except Exception:
+        db.rollback()
+    finally:
+        db.close()
+
+
 @app.on_event("startup")
 def startup_event() -> None:
     Base.metadata.create_all(bind=engine)
+    seed_cvs_from_files()
     cleanup_duplicate_companies_by_email()
 
 frontend_dir = Path(__file__).resolve().parents[2] / "job_ai_crm_frontend"
