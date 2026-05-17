@@ -5,7 +5,7 @@
   },
   "deploy": {
     "startCommand": "cd job_ai_crm_backend && uvicorn app.main:app --host 0.0.0.0 --port $PORT",
-    "healthcheckPath": "/",
+    "healthcheckPath": "/health",
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 3
   }

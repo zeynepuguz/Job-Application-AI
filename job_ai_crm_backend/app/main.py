@@ -51,6 +51,11 @@ app.include_router(companies_router)
 app.include_router(applications.router)
 
 
+@app.get("/health")
+def health():
+    return {"status": "ok"}
+
+
 def cleanup_duplicate_companies_by_email() -> None:
     db = SessionLocal()
     try:
