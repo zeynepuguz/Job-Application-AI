@@ -39,8 +39,43 @@ async function initAuth() {
   hideLoginOverlay();
 }
 
+const AVATAR_KEY = "jobai_avatar";
+
+function loadAvatar() {
+  const stored = localStorage.getItem(AVATAR_KEY);
+  const img = $("avatarImg");
+  const placeholder = $("avatarPlaceholder");
+  if (!img || !placeholder) return;
+  if (stored) {
+    img.src = stored;
+    img.classList.remove("hidden");
+    placeholder.classList.add("hidden");
+  } else {
+    img.classList.add("hidden");
+    placeholder.classList.remove("hidden");
+  }
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   initAuth();
+  loadAvatar();
+
+  const avatarBtn = $("avatarBtn");
+  const avatarInput = $("avatarInput");
+  if (avatarBtn && avatarInput) {
+    avatarBtn.addEventListener("click", () => avatarInput.click());
+    avatarInput.addEventListener("change", () => {
+      const file = avatarInput.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        localStorage.setItem(AVATAR_KEY, e.target.result);
+        loadAvatar();
+      };
+      reader.readAsDataURL(file);
+      avatarInput.value = "";
+    });
+  }
 
   const loginBtn = $("loginBtn");
   const loginPassword = $("loginPassword");

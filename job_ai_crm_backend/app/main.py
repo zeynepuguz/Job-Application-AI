@@ -1,4 +1,7 @@
 from pathlib import Path
+from dotenv import load_dotenv
+
+load_dotenv(Path(__file__).resolve().parents[1] / ".env")
 
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
@@ -7,7 +10,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 
-from app.database import SessionLocal
+from app.database import SessionLocal, engine, Base
 from app.routes.companies import router as companies_router
 from app.routes import applications
 from app.routes.auth import router as auth_router
@@ -16,10 +19,9 @@ from app.services.auth import verify_token
 from app.models.company import Company
 from app.models.application import Application
 from app.models.company_chat_message import CompanyChatMessage
-
-from dotenv import load_dotenv
-
-load_dotenv()
+import app.models.cv
+import app.models.generated_email
+import app.models.user_ai_preference
 
 app = FastAPI(
     title="Job AI CRM API",
@@ -108,7 +110,8 @@ def cleanup_duplicate_companies_by_email() -> None:
 
 
 @app.on_event("startup")
-def startup_cleanup_duplicate_companies() -> None:
+def startup_event() -> None:
+    Base.metadata.create_all(bind=engine)
     cleanup_duplicate_companies_by_email()
 
 frontend_dir = Path(__file__).resolve().parents[2] / "job_ai_crm_frontend"

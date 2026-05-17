@@ -6,17 +6,20 @@ export default defineConfig({
     port: 5174,
     strictPort: true,
     proxy: {
-      "/auth": {
+      "^/auth(/.*)?$": {
         target: "http://127.0.0.1:8000",
         changeOrigin: true,
+        rewrite: (path) => path,
       },
-      "/applications": {
+      "^/applications(/.*)?$": {
         target: "http://127.0.0.1:8000",
         changeOrigin: true,
+        rewrite: (path) => path,
       },
-      "/companies": {
+      "^/companies(/.*)?$": {
         target: "http://127.0.0.1:8000",
         changeOrigin: true,
+        rewrite: (path) => path,
       },
     },
   },

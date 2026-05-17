@@ -1,5 +1,4 @@
 from fastapi import APIRouter, Depends, HTTPException
-from httpcore import request
 from app.models.generated_email import GeneratedEmail
 from app.services.email_history import get_recent_email_patterns
 from sqlalchemy.orm import Session

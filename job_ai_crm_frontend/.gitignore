@@ -1,2 +1,6 @@
 node_modules/
 dist/
+assets/*.jpg
+assets/*.jpeg
+assets/*.png
+assets/*.webp

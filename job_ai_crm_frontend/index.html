@@ -143,15 +143,21 @@
             Şirketler
           </a>
 
-          <div
-            class="w-14 h-14 rounded-full bg-surface-container-highest flex items-center justify-center overflow-hidden border border-outline-variant"
+          <button
+            id="avatarBtn"
+            type="button"
+            title="Profil fotoğrafı değiştir"
+            class="relative w-14 h-14 rounded-full bg-surface-container-highest flex items-center justify-center overflow-hidden border border-outline-variant cursor-pointer group focus:outline-none focus:ring-2 focus:ring-primary"
           >
             <img
-              alt="Zeynep Profil"
-              class="w-full h-full object-cover"
-              src="./assets/zeynepp.jpg"
+              id="avatarImg"
+              alt="Profil"
+              class="w-full h-full object-cover hidden"
             />
-          </div>
+            <span id="avatarPlaceholder" class="text-xl select-none" aria-hidden="true">👤</span>
+            <span class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-medium rounded-full pointer-events-none">Değiştir</span>
+          </button>
+          <input id="avatarInput" type="file" accept="image/*" aria-label="Profil fotoğrafı seç" class="hidden" />
         </div>
       </div>
     </header>
