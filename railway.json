@@ -1,8 +1,7 @@
 {
   "$schema": "https://railway.app/railway.schema.json",
   "build": {
-    "builder": "NIXPACKS",
-    "buildCommand": "cd job_ai_crm_backend && pip install -r requirements.txt"
+    "builder": "NIXPACKS"
   },
   "deploy": {
     "startCommand": "cd job_ai_crm_backend && uvicorn app.main:app --host 0.0.0.0 --port $PORT",
