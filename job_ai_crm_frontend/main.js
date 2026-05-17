@@ -1299,10 +1299,18 @@ $("btnSend").addEventListener("click", async () => {
       formData.append("extra_file", extraFileInput.files[0]);
     }
 
-    const res = await authFetch(`/applications/${applicationId}/send`, {
-      method: "POST",
-      body: formData,
-    });
+    const controller = new AbortController();
+    const sendTimeout = setTimeout(() => controller.abort(), 60000);
+    let res;
+    try {
+      res = await authFetch(`/applications/${applicationId}/send`, {
+        method: "POST",
+        body: formData,
+        signal: controller.signal,
+      });
+    } finally {
+      clearTimeout(sendTimeout);
+    }
 
     if (!res.ok) {
       throw new Error(await parseErrorDetail(res));
