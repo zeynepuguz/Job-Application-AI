@@ -159,6 +159,9 @@ def seed_cvs_from_files() -> None:
 @app.on_event("startup")
 def startup_event() -> None:
     Base.metadata.create_all(bind=engine)
+    with engine.connect() as conn:
+        conn.execute(text("ALTER TABLE cvs ADD COLUMN IF NOT EXISTS file_data TEXT;"))
+        conn.commit()
     seed_cvs_from_files()
     cleanup_duplicate_companies_by_email()
 
