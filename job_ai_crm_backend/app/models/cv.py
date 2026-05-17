@@ -14,6 +14,7 @@ class CV(Base):
     title = Column(String(255), nullable=False)
     role_type = Column(String(50), nullable=False)
     file_url = Column(Text, nullable=True)
+    file_data = Column(Text, nullable=True)  # base64-encoded PDF
     content_text = Column(Text, nullable=True)
     is_active = Column(Boolean, default=True)
 

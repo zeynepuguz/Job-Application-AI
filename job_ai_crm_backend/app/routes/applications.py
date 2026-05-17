@@ -394,6 +394,16 @@ def send_application(
 
     cv_path = choose_cv_file_path(application.role_type)
 
+    # DB'den aktif CV binary'sini al (Railway'de dosya sistemi yok)
+    db_cv = (
+        db.query(CV)
+        .filter(CV.role_type == application.role_type)
+        .filter(CV.is_active == True)
+        .first()
+    )
+    cv_file_data = db_cv.file_data if db_cv else None
+    cv_filename = f"{db_cv.title}.pdf" if db_cv else "CV.pdf"
+
     extra_path = None
     tmp_dir = None
     if extra_file and extra_file.filename:
@@ -409,6 +419,8 @@ def send_application(
             body=generated_email.body,
             cv_path=cv_path,
             extra_attachment_path=extra_path,
+            cv_file_data=cv_file_data,
+            cv_filename=cv_filename,
         )
     except Exception as e:
         raise HTTPException(

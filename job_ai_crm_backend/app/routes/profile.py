@@ -1,4 +1,5 @@
 import io
+import base64
 from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -55,7 +56,9 @@ async def upload_cv(
 
     db.query(CV).filter(CV.role_type == role_type).update({"is_active": False})
 
-    cv = CV(title=title, role_type=role_type, content_text=text, is_active=True)
+    file_data_b64 = base64.b64encode(content).decode("utf-8")
+    cv = CV(title=title, role_type=role_type, content_text=text,
+            file_data=file_data_b64, is_active=True)
     db.add(cv)
     db.commit()
     return {"ok": True, "role_type": role_type, "chars": len(text)}
