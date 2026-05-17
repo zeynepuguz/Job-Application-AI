@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 
 load_dotenv(Path(__file__).resolve().parents[1] / ".env")
 
+import re
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy import text
@@ -29,12 +30,12 @@ app = FastAPI(
     version="1.0.0"
 )
 
-PROTECTED_PREFIXES = ("/companies", "/applications")
+PROTECTED_PATTERNS = re.compile(r"^/(companies|applications)(/|$)")
 
 
 class AuthMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
-        if any(request.url.path.startswith(p) for p in PROTECTED_PREFIXES):
+        if PROTECTED_PATTERNS.match(request.url.path):
             auth_header = request.headers.get("Authorization", "")
             if not auth_header.startswith("Bearer "):
                 return JSONResponse({"detail": "Yetkisiz erişim."}, status_code=401)
