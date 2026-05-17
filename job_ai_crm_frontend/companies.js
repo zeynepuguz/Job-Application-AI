@@ -1,14 +1,29 @@
 const $ = (id) => document.getElementById(id);
 
+const TOKEN_KEY = "jobai_token";
+function getToken() { return localStorage.getItem(TOKEN_KEY); }
+function clearToken() { localStorage.removeItem(TOKEN_KEY); }
+
+function authFetch(url, options = {}) {
+  const token = getToken();
+  const headers = { ...(options.headers || {}) };
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+  return fetch(url, { ...options, headers });
+}
+
+if (!getToken()) { window.location.href = "/"; }
+
 async function fetchCompanies() {
-  const res = await fetch("/companies/");
+  const res = await authFetch("/companies/");
+  if (res.status === 401) { clearToken(); window.location.href = "/"; }
   if (!res.ok) throw new Error(`Şirketler alınamadı: ${res.status}`);
   const data = await res.json();
   return Array.isArray(data) ? data : [];
 }
 
 async function fetchSentApplications() {
-  const res = await fetch("/applications/sent");
+  const res = await authFetch("/applications/sent");
+  if (res.status === 401) { clearToken(); window.location.href = "/"; }
   if (!res.ok) throw new Error(`Başvurular alınamadı: ${res.status}`);
   const data = await res.json();
   return Array.isArray(data?.applications) ? data.applications : [];
