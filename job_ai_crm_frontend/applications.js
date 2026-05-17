@@ -1,6 +1,26 @@
 const STORAGE_KEY = "jobai_applications";
+const TOKEN_KEY = "jobai_token";
 
 const $ = (id) => document.getElementById(id);
+
+function getToken() { return localStorage.getItem(TOKEN_KEY); }
+function clearToken() { localStorage.removeItem(TOKEN_KEY); }
+
+function showLoginAndRedirect() {
+  clearToken();
+  window.location.href = "/";
+}
+
+async function authFetch(url, options = {}) {
+  const token = getToken();
+  const headers = { ...(options.headers || {}) };
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+  const res = await fetch(url, { ...options, headers });
+  if (res.status === 401) showLoginAndRedirect();
+  return res;
+}
+
+if (!getToken()) showLoginAndRedirect();
 
 function readApplications() {
   try {
@@ -12,7 +32,7 @@ function readApplications() {
 }
 
 async function fetchSentApplications() {
-  const res = await fetch("/applications/sent");
+  const res = await authFetch("/applications/sent");
   if (!res.ok) {
     throw new Error(`Applications endpoint hatası: ${res.status}`);
   }
@@ -154,7 +174,7 @@ function renderList(items) {
       btn.textContent = "...";
 
       try {
-        const res = await fetch(`/applications/${appId}/status`, {
+        const res = await authFetch(`/applications/${appId}/status`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ status, notes }),

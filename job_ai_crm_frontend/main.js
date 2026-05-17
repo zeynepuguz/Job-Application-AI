@@ -1,5 +1,91 @@
 const $ = (id) => document.getElementById(id);
 
+const TOKEN_KEY = "jobai_token";
+
+function getToken() { return localStorage.getItem(TOKEN_KEY); }
+function setToken(t) { localStorage.setItem(TOKEN_KEY, t); }
+function clearToken() { localStorage.removeItem(TOKEN_KEY); }
+
+function showLoginOverlay() {
+  const overlay = $("loginOverlay");
+  if (overlay) overlay.classList.remove("hidden");
+}
+
+function hideLoginOverlay() {
+  const overlay = $("loginOverlay");
+  if (overlay) overlay.classList.add("hidden");
+}
+
+async function authFetch(url, options = {}) {
+  const token = getToken();
+  const headers = { ...(options.headers || {}) };
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+
+  const res = await fetch(url, { ...options, headers });
+
+  if (res.status === 401) {
+    clearToken();
+    showLoginOverlay();
+  }
+  return res;
+}
+
+async function initAuth() {
+  if (!getToken()) {
+    showLoginOverlay();
+    return;
+  }
+  // Token varsa gizle
+  hideLoginOverlay();
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  initAuth();
+
+  const loginBtn = $("loginBtn");
+  const loginPassword = $("loginPassword");
+  const loginError = $("loginError");
+
+  if (loginBtn) {
+    loginBtn.addEventListener("click", async () => {
+      const password = loginPassword?.value || "";
+      if (!password) return;
+
+      loginBtn.disabled = true;
+      loginBtn.textContent = "...";
+      if (loginError) loginError.classList.add("hidden");
+
+      try {
+        const res = await fetch("/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ password }),
+        });
+
+        if (!res.ok) {
+          if (loginError) loginError.classList.remove("hidden");
+          return;
+        }
+
+        const data = await res.json();
+        setToken(data.token);
+        hideLoginOverlay();
+      } catch {
+        if (loginError) loginError.classList.remove("hidden");
+      } finally {
+        loginBtn.disabled = false;
+        loginBtn.textContent = "Giriş Yap";
+      }
+    });
+  }
+
+  if (loginPassword) {
+    loginPassword.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") loginBtn?.click();
+    });
+  }
+});
+
 let applicationId = null;
 let currentCompanyId = null;
 let canSendApplication = false;
@@ -238,7 +324,7 @@ async function askCompanyQuestion() {
   if (questionInput) questionInput.value = "";
 
   try {
-    const res = await fetch(`/companies/${currentCompanyId}/chat`, {
+    const res = await authFetch(`/companies/${currentCompanyId}/chat`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ question }),
@@ -285,7 +371,7 @@ async function saveContactEmail() {
   if (btn) btn.disabled = true;
 
   try {
-    const res = await fetch(`/companies/${currentCompanyId}/contact-email`, {
+    const res = await authFetch(`/companies/${currentCompanyId}/contact-email`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ contact_email: value }),
@@ -335,7 +421,7 @@ function setupCompanyChat() {
       if (clearBtn) clearBtn.disabled = true;
 
       try {
-        const res = await fetch(`/companies/${currentCompanyId}/chat`, {
+        const res = await authFetch(`/companies/${currentCompanyId}/chat`, {
           method: "DELETE",
         });
 
@@ -381,7 +467,7 @@ async function parseErrorDetail(res) {
 }
 
 async function fetchCompanies() {
-  const res = await fetch("/companies/");
+  const res = await authFetch("/companies/");
 
   if (!res.ok) {
     throw new Error("Şirketler alınamadı.");
@@ -887,7 +973,7 @@ $("btnGenerate").addEventListener("click", async () => {
   setLoading(true);
 
   try {
-    const res = await fetch(endpoint, {
+    const res = await authFetch(endpoint, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
@@ -1022,7 +1108,7 @@ $("btnRefine").addEventListener("click", async () => {
   setLoading(true);
 
   try {
-    const res = await fetch(`/applications/${applicationId}/refine-email`, {
+    const res = await authFetch(`/applications/${applicationId}/refine-email`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ instruction }),
@@ -1090,7 +1176,7 @@ $("btnSend").addEventListener("click", async () => {
       formData.append("extra_file", extraFileInput.files[0]);
     }
 
-    const res = await fetch(`/applications/${applicationId}/send`, {
+    const res = await authFetch(`/applications/${applicationId}/send`, {
       method: "POST",
       body: formData,
     });

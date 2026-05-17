@@ -3,10 +3,15 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy import text
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.requests import Request
+from starlette.responses import JSONResponse
 
 from app.database import SessionLocal
 from app.routes.companies import router as companies_router
 from app.routes import applications
+from app.routes.auth import router as auth_router
+from app.services.auth import verify_token
 
 from app.models.company import Company
 from app.models.application import Application
@@ -22,6 +27,24 @@ app = FastAPI(
     version="1.0.0"
 )
 
+PROTECTED_PREFIXES = ("/companies", "/applications")
+
+
+class AuthMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        if any(request.url.path.startswith(p) for p in PROTECTED_PREFIXES):
+            auth_header = request.headers.get("Authorization", "")
+            if not auth_header.startswith("Bearer "):
+                return JSONResponse({"detail": "Yetkisiz erişim."}, status_code=401)
+            token = auth_header.removeprefix("Bearer ")
+            if not verify_token(token):
+                return JSONResponse({"detail": "Geçersiz veya süresi dolmuş token."}, status_code=401)
+        return await call_next(request)
+
+
+app.add_middleware(AuthMiddleware)
+
+app.include_router(auth_router)
 app.include_router(companies_router)
 app.include_router(applications.router)
 
