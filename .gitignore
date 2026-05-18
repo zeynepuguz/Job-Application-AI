@@ -33,6 +33,8 @@ job_ai_crm_frontend/assets/*.webp
 .DS_Store
 Thumbs.db
 
+.claude/
+
 # IDE
 .vscode/
 .idea/

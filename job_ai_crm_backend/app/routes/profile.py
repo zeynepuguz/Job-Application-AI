@@ -1,4 +1,5 @@
 import io
+import re
 import base64
 from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException
 from pydantic import BaseModel
@@ -35,13 +36,12 @@ def set_avatar(payload: AvatarPayload, db: Session = Depends(get_db)):
 
 @router.get("/cvs")
 def list_cvs(db: Session = Depends(get_db)):
-    cvs = db.query(CV).all()
-    return [{"id": str(c.id), "title": c.title, "role_type": c.role_type, "is_active": c.is_active} for c in cvs]
+    cvs = db.query(CV).filter(CV.is_active == True).order_by(CV.created_at.desc()).all()
+    return [{"id": str(c.id), "title": c.title, "role_type": c.role_type} for c in cvs]
 
 
 @router.post("/cvs")
 async def upload_cv(
-    role_type: str = Form(...),
     title: str = Form(...),
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
@@ -54,14 +54,24 @@ async def upload_cv(
     if not text.strip():
         raise HTTPException(status_code=400, detail="PDF'ten metin çıkarılamadı.")
 
-    db.query(CV).filter(CV.role_type == role_type).delete()
+    role_type = re.sub(r"[^a-z0-9]+", "_", title.lower()).strip("_")
 
     file_data_b64 = base64.b64encode(content).decode("utf-8")
-    cv = CV(title=title, role_type=role_type, content_text=text,
+    cv = CV(title=title.strip(), role_type=role_type, content_text=text,
             file_data=file_data_b64, is_active=True)
     db.add(cv)
     db.commit()
-    return {"ok": True, "role_type": role_type, "chars": len(text)}
+    return {"ok": True, "id": str(cv.id), "title": cv.title, "chars": len(text)}
+
+
+@router.delete("/cvs/{cv_id}")
+def delete_cv(cv_id: str, db: Session = Depends(get_db)):
+    cv = db.query(CV).filter(CV.id == cv_id).first()
+    if not cv:
+        raise HTTPException(status_code=404, detail="CV bulunamadı")
+    db.delete(cv)
+    db.commit()
+    return {"ok": True}
 
 
 def _extract_pdf_text(data: bytes) -> str:

@@ -68,34 +68,21 @@ def is_valid_email(email: str) -> bool:
     return bool(re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", email))
 
 
-def choose_cv_role_type(role: str) -> str:
-    role_lower = role.lower()
+def choose_best_cv(db: Session, role: str):
+    cvs = db.query(CV).filter(CV.is_active == True).all()
+    if not cvs:
+        return None
+    if len(cvs) == 1:
+        return cvs[0]
 
-    if "backend" in role_lower and "ai" in role_lower:
-        return "backend_ai_engineer"
-
-    if "backend" in role_lower:
-        return "backend_ai_engineer"
-
-    if (
-        "ai" in role_lower
-        or "machine learning" in role_lower
-        or "ml" in role_lower
-        or "yapay zeka" in role_lower
-    ):
-        return "ai_engineer"
-
-    return "ai_engineer"
-
-
-def choose_cv_file_path(role_type: str) -> str | None:
-    if role_type == "backend_ai_engineer":
-        return os.getenv("BACKEND_AI_ENGINEER_CV_PATH")
-
-    if role_type == "ai_engineer":
-        return os.getenv("AI_ENGINEER_CV_PATH")
-
-    return None
+    role_words = set(w for w in role.lower().split() if len(w) > 2)
+    best, best_score = cvs[0], -1
+    for cv in cvs:
+        title_lower = (cv.title or "").lower()
+        score = sum(1 for w in role_words if w in title_lower)
+        if score > best_score:
+            best_score, best = score, cv
+    return best
 
 
 @router.get("/sent", response_model=SentApplicationsResponse)
@@ -208,19 +195,12 @@ def prepare_application(
             except Exception as e:
                 print("PINECONE UPSERT ERROR:", e)
 
-    cv_role_type = choose_cv_role_type(request.role)
-
-    cv = (
-        db.query(CV)
-        .filter(CV.role_type == cv_role_type)
-        .filter(CV.is_active == True)
-        .first()
-    )
+    cv = choose_best_cv(db, request.role)
 
     if not cv:
         raise HTTPException(
             status_code=404,
-            detail=f"No active CV found for role_type: {cv_role_type}"
+            detail="Aktif CV bulunamadı. Lütfen ⚙️ menüsünden CV yükleyin."
         )
 
     result = generate_email(
@@ -392,17 +372,12 @@ def send_application(
             detail="Alıcı e-postası bulunamadı. Önizlemede alıcı alanını doldurun veya şirket kaydına iletişim ekleyin."
         )
 
-    cv_path = choose_cv_file_path(application.role_type)
-
-    # DB'den aktif CV binary'sini al (Railway'de dosya sistemi yok)
-    db_cv = (
-        db.query(CV)
-        .filter(CV.role_type == application.role_type)
-        .filter(CV.is_active == True)
-        .first()
-    )
+    db_cv = db.query(CV).filter(CV.id == application.cv_id).first()
+    if not db_cv:
+        db_cv = db.query(CV).filter(CV.is_active == True).first()
     cv_file_data = db_cv.file_data if db_cv else None
     cv_filename = f"{db_cv.title}.pdf" if db_cv else "CV.pdf"
+    cv_path = None
 
     extra_path = None
     tmp_dir = None

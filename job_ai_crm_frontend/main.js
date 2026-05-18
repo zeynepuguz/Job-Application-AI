@@ -100,63 +100,43 @@ document.addEventListener("DOMContentLoaded", () => {
   const cvModal = $("cvModal");
   const cvModalClose = $("cvModalClose");
 
-  const CV_ROLES = ["ai_engineer", "backend_ai_engineer"];
-
-  async function loadCvStatuses() {
+  async function loadCvList() {
+    const listEl = $("cvList");
+    if (!listEl) return;
     try {
       const res = await authFetch("/profile/cvs");
       const cvs = await res.json();
-      CV_ROLES.forEach(role => {
-        const active = cvs.find(c => c.role_type === role && c.is_active);
-        const el = $(`cvStatus_${role}`);
-        if (el) el.textContent = active ? `Aktif: ${active.title}` : "Henüz yüklenmedi";
+      if (!cvs.length) {
+        listEl.innerHTML = `<p class="text-xs text-slate-400">Henüz CV yüklenmedi.</p>`;
+        return;
+      }
+      listEl.innerHTML = cvs.map(cv => `
+        <div class="flex items-center justify-between bg-slate-50 rounded-lg px-3 py-2">
+          <span class="text-sm text-slate-700 truncate">${cv.title}</span>
+          <button type="button" data-cv-id="${cv.id}"
+            class="cv-delete-btn ml-2 text-xs text-red-400 hover:text-red-600 shrink-0">Sil</button>
+        </div>`).join("");
+
+      listEl.querySelectorAll(".cv-delete-btn").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          const id = btn.dataset.cvId;
+          btn.disabled = true;
+          try {
+            await authFetch(`/profile/cvs/${id}`, { method: "DELETE" });
+            loadCvList();
+          } catch { btn.disabled = false; }
+        });
       });
     } catch {
-      CV_ROLES.forEach(role => {
-        const el = $(`cvStatus_${role}`);
-        if (el) el.textContent = "Yüklenemedi";
-      });
+      listEl.innerHTML = `<p class="text-xs text-red-400">CV listesi alınamadı.</p>`;
     }
-  }
-
-  async function uploadCv(roleType, file) {
-    const msgEl = $(`cvMsg_${roleType}`);
-    const btn = document.querySelector(`[data-role="${roleType}"]`);
-    const titles = { ai_engineer: "AI Engineer CV", backend_ai_engineer: "Backend AI Engineer CV" };
-
-    if (btn) { btn.disabled = true; btn.textContent = "Yükleniyor..."; }
-
-    const form = new FormData();
-    form.append("role_type", roleType);
-    form.append("title", titles[roleType] || roleType);
-    form.append("file", file);
-
-    try {
-      const res = await authFetch("/profile/cvs", { method: "POST", body: form });
-      const data = await res.json();
-      if (!res.ok) { showRoleMsg(msgEl, data.detail || "Hata.", "red"); return; }
-      showRoleMsg(msgEl, `Yüklendi`, "green");
-      loadCvStatuses();
-    } catch {
-      showRoleMsg(msgEl, "Yükleme başarısız.", "red");
-    } finally {
-      if (btn) { btn.disabled = false; btn.textContent = "Değiştir / Yükle"; }
-    }
-  }
-
-  function showRoleMsg(el, msg, color) {
-    if (!el) return;
-    el.textContent = msg;
-    el.className = `text-xs text-center ${color === "green" ? "text-green-600" : "text-red-600"}`;
-    el.classList.remove("hidden");
-    setTimeout(() => el.classList.add("hidden"), 4000);
   }
 
   if (cvSettingsBtn && cvModal) {
     cvSettingsBtn.addEventListener("click", () => {
       cvModal.classList.remove("hidden");
       cvModal.classList.add("flex");
-      loadCvStatuses();
+      loadCvList();
     });
     cvModalClose?.addEventListener("click", () => {
       cvModal.classList.add("hidden");
@@ -167,22 +147,43 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  document.querySelectorAll(".cv-upload-trigger").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const role = btn.dataset.role;
-      $(`cvFile_${role}`)?.click();
-    });
-  });
+  const cvUploadBtn = $("cvUploadBtn");
+  if (cvUploadBtn) {
+    cvUploadBtn.addEventListener("click", async () => {
+      const title = $("cvTitleInput")?.value?.trim();
+      const file = $("cvFileInput")?.files?.[0];
+      const msgEl = $("cvUploadMsg");
 
-  CV_ROLES.forEach(role => {
-    const input = $(`cvFile_${role}`);
-    if (input) {
-      input.addEventListener("change", () => {
-        const file = input.files?.[0];
-        if (file) { uploadCv(role, file); input.value = ""; }
-      });
-    }
-  });
+      if (!title) { showCvMsg(msgEl, "CV adı girin.", "red"); return; }
+      if (!file)  { showCvMsg(msgEl, "PDF dosyası seçin.", "red"); return; }
+
+      cvUploadBtn.disabled = true;
+      cvUploadBtn.textContent = "Yükleniyor...";
+
+      const form = new FormData();
+      form.append("title", title);
+      form.append("file", file);
+
+      try {
+        const res = await authFetch("/profile/cvs", { method: "POST", body: form });
+        const data = await res.json();
+        if (!res.ok) { showCvMsg(msgEl, data.detail || "Hata.", "red"); return; }
+        showCvMsg(msgEl, "Yüklendi.", "green");
+        if ($("cvTitleInput")) $("cvTitleInput").value = "";
+        if ($("cvFileInput"))  $("cvFileInput").value = "";
+        loadCvList();
+      } catch { showCvMsg(msgEl, "Yükleme başarısız.", "red"); }
+      finally { cvUploadBtn.disabled = false; cvUploadBtn.textContent = "Yükle"; }
+    });
+  }
+
+  function showCvMsg(el, msg, color) {
+    if (!el) return;
+    el.textContent = msg;
+    el.className = `text-xs text-center ${color === "green" ? "text-green-600" : "text-red-600"}`;
+    el.classList.remove("hidden");
+    setTimeout(() => el.classList.add("hidden"), 4000);
+  }
 
   const loginBtn = $("loginBtn");
   const loginPassword = $("loginPassword");
