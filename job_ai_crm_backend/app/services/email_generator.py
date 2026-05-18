@@ -45,6 +45,8 @@ def generate_email(
         else ""
     )
 
+    cv_snippet = (cv.content_text or "")[:1200].strip()
+
     prompt = f"""
 You are writing a REALISTIC, short and natural email. It must feel like a real human wrote it.
 
@@ -54,6 +56,9 @@ Company:
 
 Target Role:
 {role}
+
+Candidate CV Summary (use this to find 1 genuine skill/focus to mention):
+{cv_snippet}
 
 Language:
 - {lang_instruction}
@@ -69,11 +74,11 @@ IMPORTANT RULES:
 - Do NOT sound like a template.
 
 ROLE AWARENESS (VERY IMPORTANT):
-- Understand the role carefully.
-- If the role includes "backend", mention backend-related interest.
-- If the role includes "AI" or "machine learning", mention AI/NLP interest.
-- If both exist, combine them naturally (1 short phrase only).
-- Do NOT ignore parts of the role.
+- Read the CV carefully and pick ONE real skill or focus area that fits the role.
+- Do NOT default to NLP just because the role mentions AI.
+- Only mention NLP if the CV actually shows NLP experience.
+- If the role includes "backend", mention a backend-related skill from the CV.
+- Keep it to 1 short phrase only.
 - Do NOT over-explain, just hint.
 
 WHAT TO DO:
