@@ -239,18 +239,27 @@ let companiesLoading = false;
 
 const STORAGE_KEY = "jobai_applications";
 
-const cvProfiles = {
-  ai_engineer: {
-    label: "AI Engineer CV",
-    desc: "Genel AI rollerine uygun varsayılan CV.",
-    suggestedRole: "AI Engineer",
-  },
-  backend_ai_engineer: {
-    label: "Backend AI Engineer CV",
-    desc: "Backend + model servisleme odaklı CV.",
-    suggestedRole: "Backend AI Engineer",
-  },
-};
+let userCvs = [];
+
+async function loadUserCvs() {
+  try {
+    const res = await authFetch("/profile/cvs");
+    if (!res.ok) return;
+    userCvs = await res.json();
+    const sel = $("cvSelector");
+    if (!sel) return;
+    if (!userCvs.length) {
+      sel.innerHTML = `<option value="">CV yüklenmedi</option>`;
+      $("selectedCvName").textContent = "CV yüklenmedi";
+      $("selectedCvDesc").textContent = "⚙️ menüsünden CV yükleyin.";
+      return;
+    }
+    sel.innerHTML = userCvs.map(cv =>
+      `<option value="${cv.id}">${cv.title}</option>`
+    ).join("");
+    syncCvCard(userCvs[0].id);
+  } catch {}
+}
 
 function getApplicationMode() {
   const checked = document.querySelector('input[name="applicationMode"]:checked');
@@ -272,33 +281,20 @@ function updateMailModePlaceholders(mode) {
 }
 
 function activeCvKey() {
-  return $("cvSelector")?.value || "ai_engineer";
+  return $("cvSelector")?.value || (userCvs[0]?.id ?? "");
 }
 
 function suggestCvFromText(role, jobDescription) {
+  if (!userCvs.length) return "";
+  if (userCvs.length === 1) return userCvs[0].id;
   const text = `${role || ""} ${jobDescription || ""}`.toLowerCase();
-
-  if (
-    text.includes("backend") ||
-    text.includes("api") ||
-    text.includes("fastapi") ||
-    text.includes("django") ||
-    text.includes("backend engineer")
-  ) {
-    return "backend_ai_engineer";
+  let best = userCvs[0], bestScore = -1;
+  for (const cv of userCvs) {
+    const words = (cv.title || "").toLowerCase().split(/\s+/);
+    const score = words.filter(w => w.length > 2 && text.includes(w)).length;
+    if (score > bestScore) { bestScore = score; best = cv; }
   }
-
-  if (
-    text.includes("ai") ||
-    text.includes("llm") ||
-    text.includes("machine learning") ||
-    text.includes("researcher") ||
-    text.includes("engineer")
-  ) {
-    return "ai_engineer";
-  }
-
-  return activeCvKey();
+  return best.id;
 }
 
 function hide(el) {
@@ -840,8 +836,8 @@ function upsertApplicationRecord(patch) {
       companyName: patch.companyName || "",
       role: patch.role || "",
       language: patch.language || "tr",
-      cvKey: patch.cvKey || "ai_engineer",
-      cvLabel: (cvProfiles[patch.cvKey] || cvProfiles.ai_engineer).label,
+      cvKey: patch.cvKey || (userCvs[0]?.id ?? ""),
+      cvLabel: patch.cvLabel || (userCvs.find(c => c.id === patch.cvKey)?.title ?? ""),
       contactEmail: patch.contactEmail || "",
       subject: patch.subject || "",
       body: patch.body || "",
@@ -854,7 +850,7 @@ function upsertApplicationRecord(patch) {
     items[idx] = {
       ...items[idx],
       ...patch,
-      cvLabel: (cvProfiles[patch.cvKey || items[idx].cvKey] || cvProfiles.ai_engineer).label,
+      cvLabel: patch.cvLabel || (userCvs.find(c => c.id === (patch.cvKey || items[idx].cvKey))?.title ?? ""),
       updatedAt: now,
     };
   }
@@ -1008,12 +1004,12 @@ function refreshSendAvailability() {
   setSendState(Boolean(to) && isValidEmail(to));
 }
 
-function syncCvCard(cvKey) {
-  const profile = cvProfiles[cvKey] || cvProfiles.ai_engineer;
-
-  $("cvSelector").value = cvKey;
-  $("selectedCvName").textContent = profile.label;
-  $("selectedCvDesc").textContent = profile.desc;
+function syncCvCard(cvId) {
+  const cv = userCvs.find(c => c.id === cvId);
+  const sel = $("cvSelector");
+  if (sel && cvId) sel.value = cvId;
+  if ($("selectedCvName")) $("selectedCvName").textContent = cv ? cv.title : "CV seçilmedi";
+  if ($("selectedCvDesc")) $("selectedCvDesc").textContent = "";
 }
 
 $("btnGenerate").addEventListener("click", async () => {
@@ -1220,10 +1216,10 @@ $("btnGenerate").addEventListener("click", async () => {
 });
 
 $("btnChangeCv").addEventListener("click", () => {
+  if (!userCvs.length) return;
   const current = $("cvSelector").value;
-  const next =
-    current === "ai_engineer" ? "backend_ai_engineer" : "ai_engineer";
-
+  const idx = userCvs.findIndex(c => c.id === current);
+  const next = userCvs[(idx + 1) % userCvs.length].id;
   syncCvCard(next);
 });
 
@@ -1366,7 +1362,7 @@ $("btnSend").addEventListener("click", async () => {
 setupApplicationMode();
 setupContactEmailEditor();
 setupCompanyChat();
-syncCvCard("ai_engineer");
+loadUserCvs();
 setChatCompanyInfo();
 clearCompanyChat();
 updateCompanyContactActions();

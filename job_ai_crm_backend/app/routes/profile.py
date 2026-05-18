@@ -66,9 +66,11 @@ async def upload_cv(
 
 @router.delete("/cvs/{cv_id}")
 def delete_cv(cv_id: str, db: Session = Depends(get_db)):
+    from app.models.application import Application
     cv = db.query(CV).filter(CV.id == cv_id).first()
     if not cv:
         raise HTTPException(status_code=404, detail="CV bulunamadı")
+    db.query(Application).filter(Application.cv_id == cv.id).update({"cv_id": None})
     db.delete(cv)
     db.commit()
     return {"ok": True}
