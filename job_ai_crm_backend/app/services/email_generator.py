@@ -24,15 +24,15 @@ def _extract_cv_skills(cv_text: str, role: str) -> str:
                     "content": (
                         f'Target role: "{role}"\n\n'
                         f"CV:\n{cv_text[:8000]}\n\n"
-                        "Read the ENTIRE CV above and identify the candidate's PRIMARY technical expertise — "
-                        "the area that makes up the majority of their work and projects.\n\n"
+                        "Look at the candidate's PROJECTS and WORK EXPERIENCE sections in the CV above.\n"
+                        "What specific AI/software systems has this person actually BUILT?\n\n"
                         "STRICT RULES:\n"
-                        "- Base your answer on what DOMINATES the CV, not isolated mentions.\n"
-                        "- IGNORE one-time internship topics or minor side projects.\n"
-                        "- IGNORE NLP/natural language processing UNLESS it is the main theme of the CV.\n"
-                        "- Return 1-2 short phrases that best describe the candidate's core expertise.\n"
-                        "- No bullets, no explanations, no JSON, no extra text.\n"
-                        "Example output: RAG systems, LLM application development"
+                        "- Focus on WHAT WAS BUILT (systems, applications, pipelines), not general knowledge areas.\n"
+                        "- Do NOT say 'machine learning' as a generic term — be specific (e.g. RAG pipelines, LLM APIs, recommendation systems).\n"
+                        "- IGNORE internship side-topics. Focus on the main projects.\n"
+                        "- Do NOT mention NLP unless the projects are clearly NLP-focused.\n"
+                        "- Return a SINGLE short phrase (max 6 words) describing the candidate's main built work.\n"
+                        "- No bullets, no explanations, no JSON, no extra text."
                     )
                 }
             ]
@@ -92,7 +92,7 @@ Company:
 Target Role:
 {role}
 
-Candidate's top skills for this role (extracted from full CV — use ONE of these):
+What this candidate has BUILT (from full CV analysis — mention this naturally in 1 phrase):
 {cv_skills}
 
 Language:
