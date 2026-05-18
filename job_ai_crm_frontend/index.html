@@ -171,28 +171,34 @@
 
     <!-- CV Yönetimi Modal -->
     <div id="cvModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 backdrop-blur-sm">
-      <div class="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 p-6 space-y-4">
+      <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm mx-4 p-6 space-y-4">
         <div class="flex items-center justify-between">
-          <h2 class="text-lg font-semibold text-slate-900">CV Yönetimi</h2>
+          <h2 class="text-base font-semibold text-slate-900">CV Yönetimi</h2>
           <button id="cvModalClose" type="button" class="text-slate-400 hover:text-slate-700 text-xl leading-none">&times;</button>
         </div>
-        <div id="cvList" class="space-y-2 text-sm text-slate-600">Yükleniyor...</div>
-        <hr class="border-slate-200" />
-        <p class="text-sm font-medium text-slate-700">Yeni CV Yükle (PDF)</p>
-        <div class="space-y-2">
-          <select id="cvRoleType" title="CV pozisyon türü" class="w-full text-sm border border-slate-300 rounded-lg px-3 py-2">
-            <option value="ai_engineer">AI Engineer CV</option>
-            <option value="backend_ai_engineer">Backend AI Engineer CV</option>
-          </select>
-          <input id="cvTitle" type="text" placeholder="CV başlığı (örn: AI Engineer CV 2025)"
-            class="w-full text-sm border border-slate-300 rounded-lg px-3 py-2" />
-          <input id="cvFileInput" type="file" accept=".pdf" aria-label="CV PDF dosyası seç"
-            class="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 file:mr-3 file:text-xs file:border-0 file:bg-slate-100 file:rounded file:px-2 file:py-1" />
-          <button id="cvUploadBtn" type="button"
-            class="w-full py-2 text-sm rounded-lg bg-slate-800 text-white hover:bg-slate-700">
-            Yükle
+
+        <!-- AI Engineer kartı -->
+        <div class="border border-slate-200 rounded-xl p-4 space-y-2">
+          <p class="text-sm font-medium text-slate-700">AI Engineer CV</p>
+          <p id="cvStatus_ai_engineer" class="text-xs text-slate-400">Yükleniyor...</p>
+          <input id="cvFile_ai_engineer" type="file" accept=".pdf" title="AI Engineer CV PDF" class="hidden" />
+          <button type="button" data-role="ai_engineer"
+            class="cv-upload-trigger w-full py-1.5 text-xs rounded-lg border border-slate-300 hover:bg-slate-50 transition-all">
+            Değiştir / Yükle
           </button>
-          <p id="cvUploadMsg" class="text-xs text-center hidden"></p>
+          <p id="cvMsg_ai_engineer" class="text-xs text-center hidden"></p>
+        </div>
+
+        <!-- Backend AI Engineer kartı -->
+        <div class="border border-slate-200 rounded-xl p-4 space-y-2">
+          <p class="text-sm font-medium text-slate-700">Backend AI Engineer CV</p>
+          <p id="cvStatus_backend_ai_engineer" class="text-xs text-slate-400">Yükleniyor...</p>
+          <input id="cvFile_backend_ai_engineer" type="file" accept=".pdf" title="Backend AI Engineer CV PDF" class="hidden" />
+          <button type="button" data-role="backend_ai_engineer"
+            class="cv-upload-trigger w-full py-1.5 text-xs rounded-lg border border-slate-300 hover:bg-slate-50 transition-all">
+            Değiştir / Yükle
+          </button>
+          <p id="cvMsg_backend_ai_engineer" class="text-xs text-center hidden"></p>
         </div>
       </div>
     </div>
