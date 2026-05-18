@@ -58,7 +58,7 @@ def choose_best_email(emails: list[str]) -> str | None:
 
 def fetch_single_page_text(url: str) -> tuple[str, list[str]]:
     headers = {
-        "User-Agent": "Mozilla/5.0"
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
     }
 
     response = requests.get(url, headers=headers, timeout=15)
@@ -68,11 +68,17 @@ def fetch_single_page_text(url: str) -> tuple[str, list[str]]:
     soup = BeautifulSoup(raw_html, "html.parser")
 
     discovered_links = []
+    mailto_emails = []
 
     for a in soup.find_all("a", href=True):
         href = a["href"]
         link_text = a.get_text(" ", strip=True)
         combined = f"{href} {link_text}".lower()
+
+        if href.lower().startswith("mailto:"):
+            email_part = href[7:].split("?")[0].strip()
+            if email_part:
+                mailto_emails.append(email_part)
 
         if any(keyword in combined for keyword in CONTACT_KEYWORDS):
             discovered_links.append(href)
@@ -83,7 +89,8 @@ def fetch_single_page_text(url: str) -> tuple[str, list[str]]:
     visible_text = soup.get_text(separator=" ")
     visible_text = re.sub(r"\s+", " ", visible_text).strip()
 
-    combined_text = visible_text + " " + raw_html
+    mailto_block = " ".join(mailto_emails)
+    combined_text = mailto_block + " " + visible_text + " " + raw_html
 
     return combined_text, discovered_links
 

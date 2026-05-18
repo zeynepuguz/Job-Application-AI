@@ -170,7 +170,7 @@ def prepare_application(
                 "city": company_data.get("city") or ai_data.get("city"),
                 "description": ai_data.get("description") or company_data.get("description"),
                 "ai_summary": ai_data.get("summary") or company_data.get("ai_summary"),
-                "contact_email": company_data.get("contact_email"),
+                "contact_email": company_data.get("contact_email") or ai_data.get("contact_email"),
             })
 
             existing_by_email = get_existing_company_by_email(
