@@ -6,7 +6,6 @@ from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
 
 import re
-import json
 
 from app.database import get_db
 from app.models.company_chat_message import CompanyChatMessage
@@ -29,7 +28,7 @@ from app.services.url_analyzer import (
     extract_company_data_from_text,
     normalize_url
 )
-from app.services.ai_analyzer import analyze_with_ai, generate_manual_email
+from app.services.ai_analyzer import analyze_with_ai
 from app.services.vector_store import upsert_company_text
 from app.services.company_chat import answer_company_question
 from app.services.ai_agents.orchestrator import generate_agentic_email
@@ -40,15 +39,6 @@ router = APIRouter(
     prefix="/companies",
     tags=["Companies"]
 )
-
-
-def extract_json_from_ai_response(text: str):
-    match = re.search(r"\{.*\}", text, re.DOTALL)
-
-    if not match:
-        raise ValueError("No JSON found")
-
-    return json.loads(match.group())
 
 
 def normalize_email(email: str | None) -> str | None:
@@ -122,8 +112,6 @@ def analyze_company_url(
 
     try:
         ai_data = analyze_with_ai(text, request.url)
-        print("AI RESULT:", ai_data)
-
         company_data.update({
             "name": ai_data.get("name") or company_data["name"],
             "industry": ai_data.get("industry") or company_data.get("industry"),
@@ -137,7 +125,6 @@ def analyze_company_url(
         })
 
     except Exception as e:
-        print("AI ERROR:", e)
         raise HTTPException(status_code=500, detail=str(e))
 
     existing_by_email = get_existing_company_by_email(db, company_data.get("contact_email"))
@@ -157,8 +144,8 @@ def analyze_company_url(
             website=company.website,
             text=text
         )
-    except Exception as e:
-        print("PINECONE UPSERT ERROR:", e)
+    except Exception:
+        pass
 
     return company
 
@@ -297,21 +284,21 @@ def generate_application_email(
 
     mail_language = (request.language or "tr").strip() or "tr"
 
-    role_key = (request.cv_role_type or "ai_engineer").strip()
-    if role_key not in ("ai_engineer", "backend_ai_engineer"):
-        role_key = "ai_engineer"
-
-    cv = (
-        db.query(CV)
-        .filter(CV.role_type == role_key)
-        .filter(CV.is_active == True)
-        .first()
-    )
+    cv = None
+    if request.cv_id:
+        cv = db.query(CV).filter(CV.id == request.cv_id, CV.is_active == True).first()
     if not cv:
-        raise HTTPException(
-            status_code=404,
-            detail=f"Aktif CV bulunamadı: {role_key}",
-        )
+        cvs = db.query(CV).filter(CV.is_active == True).all()
+        if not cvs:
+            raise HTTPException(status_code=404, detail="Aktif CV bulunamadı. Lütfen ⚙️ menüsünden CV yükleyin.")
+        role_text = (request.position or "").lower()
+        best, best_score = cvs[0], -1
+        for c in cvs:
+            words = set(w for w in (c.title or "").lower().split() if len(w) > 2)
+            score = sum(1 for w in words if w in role_text)
+            if score > best_score:
+                best_score, best = score, c
+        cv = best
 
     agent_result = generate_agentic_email(
         company_name=company_name or None,

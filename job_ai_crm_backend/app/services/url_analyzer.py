@@ -139,10 +139,6 @@ def fetch_website_text(url: str) -> str:
 
     unique_links = list(dict.fromkeys(discovered_links))
 
-    print("DISCOVERED LINKS:")
-    for link in unique_links:
-        print(urljoin(base_url + "/", link))
-
     for link in unique_links[:20]:
         page_url = urljoin(base_url + "/", link)
 
@@ -158,10 +154,6 @@ def fetch_website_text(url: str) -> str:
     combined_text = "\n".join(all_texts)
 
     emails = extract_emails(combined_text)
-
-    print("EMAILS FOUND:", emails)
-    print("TEXT LENGTH:", len(combined_text))
-
     email_block = "\n".join([f"FOUND EMAIL: {email}" for email in emails])
 
     return f"{email_block}\n\n{combined_text}"[:50000]

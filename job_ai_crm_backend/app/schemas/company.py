@@ -65,7 +65,7 @@ class ApplicationEmailRequest(BaseModel):
     recipient_email: Optional[EmailStr] = None
     job_description: Optional[str] = None
     user_instruction: Optional[str] = None
-    cv_role_type: Optional[str] = None
+    cv_id: Optional[str] = None
     portfolio_url: str | None = None
     language: str | None = "tr"
 

@@ -48,101 +48,11 @@ Rules:
         )
 
         raw_output = response.choices[0].message.content.strip()
-
-        print("AI RAW OUTPUT:", raw_output)
-
-        # JSON parse
         parsed = json.loads(raw_output)
-
         return parsed
 
-    except json.JSONDecodeError as e:
-        print("JSON PARSE ERROR:", e)
-        print("RAW OUTPUT:", raw_output)
+    except json.JSONDecodeError:
         return {}
 
-    except Exception as e:
-        print("AI ERROR:", e)
+    except Exception:
         return {}
-
-
-def generate_manual_email(
-    company_name: str | None,
-    role: str | None,
-    recipient_email: str | None,
-    job_description: str | None,
-    user_instruction: str | None,
-) -> dict:
-    full_name = os.getenv("FULL_NAME")
-    phone = os.getenv("PHONE_NUMBER")
-    email = os.getenv("EMAIL_ADDRESS")
-    linkedin = os.getenv("LINKEDIN_URL")
-
-    closing_parts = ["Saygılarımla"]
-
-    if full_name:
-        closing_parts.append(full_name)
-    if phone:
-        closing_parts.append(phone)
-    if email:
-        closing_parts.append(email)
-    if linkedin:
-        closing_parts.append(linkedin)
-
-    closing = "\n".join(closing_parts)
-
-    subject = f"{role} Başvurusu" if role else "İş Başvurusu"
-
-    prompt = f"""
-You are writing a REALISTIC, short and natural job application email in Turkish.
-
-Company:
-{company_name or "Not specified"}
-
-Role:
-{role or "Not specified"}
-
-Recipient Email:
-{recipient_email or "Not specified"}
-
-Job Description:
-{job_description or "Not specified"}
-
-User Instructions:
-{user_instruction or "Not specified"}
-
-STRICT RULES:
-- Write in Turkish.
-- Do NOT use English words.
-- Do NOT use placeholders like [Adınız], [Telefon], [Email].
-- Do NOT use exaggerated phrases like "tutkum", "heyecan duyuyorum", "değer katacağıma inanıyorum".
-- Do NOT sound robotic or AI-generated.
-- Do NOT invent experiences, projects, technologies or company details.
-- Keep it short, direct and natural.
-- Maximum 120 words.
-- End EXACTLY with:
-
-{closing}
-"""
-
-    response = client.chat.completions.create(
-        model="gpt-4o-mini",
-        temperature=0.5,
-        messages=[
-            {
-                "role": "system",
-                "content": "You write short, natural Turkish job application emails. Never use placeholders."
-            },
-            {
-                "role": "user",
-                "content": prompt
-            }
-        ]
-    )
-
-    email_body = response.choices[0].message.content.strip()
-
-    return {
-        "subject": subject,
-        "body": email_body
-    }

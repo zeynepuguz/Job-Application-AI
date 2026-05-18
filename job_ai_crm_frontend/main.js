@@ -1153,7 +1153,7 @@ $("btnGenerate").addEventListener("click", async () => {
       recipient_email: recipientEmail || null,
       job_description: jobDescription || null,
       user_instruction: userInstruction || null,
-      cv_role_type: suggestedCvKey,
+      cv_id: suggestedCvKey || null,
       language: language || "tr",
     };
 
