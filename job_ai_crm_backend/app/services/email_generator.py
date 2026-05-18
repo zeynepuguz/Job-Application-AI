@@ -24,10 +24,14 @@ def _extract_cv_skills(cv_text: str, role: str) -> str:
                     "content": (
                         f'Target role: "{role}"\n\n'
                         f"CV:\n{cv_text[:8000]}\n\n"
-                        "From the FULL CV above, list the 3 most relevant technical skills or experiences "
-                        "for this target role. Return ONLY a comma-separated list of short skill phrases. "
-                        "No bullets, no explanations, no JSON. Focus on what is central to the candidate's "
-                        "main work — do not pick minor internship topics unless the role explicitly requires them."
+                        "From the CV above, identify the candidate's TOP 3 technical skills most relevant to "
+                        f'the role "{role}".\n'
+                        "STRICT RULES:\n"
+                        "- Look at the candidate's MAIN projects and primary work experience.\n"
+                        "- IGNORE internship-level or minor side experience.\n"
+                        "- IGNORE NLP/natural language processing UNLESS the target role explicitly says 'NLP'.\n"
+                        "- Return ONLY a comma-separated list of 3 short skill phrases.\n"
+                        "- No bullets, no explanations, no JSON, no extra text."
                     )
                 }
             ]
@@ -104,8 +108,8 @@ IMPORTANT RULES:
 - Do NOT sound like a template.
 
 SKILL SELECTION (VERY IMPORTANT):
-- Read the CV carefully and find the ONE skill or experience that best matches the target role "{role}".
-- Do NOT default to any specific technology — pick what is actually in the CV and fits the role.
+- Pick ONE skill from the list above that best fits the role "{role}" and the company.
+- Do NOT mention NLP or natural language processing unless the role title explicitly contains "NLP".
 - Do NOT paraphrase or expand the role title. The role is exactly: "{role}".
 - Keep it to 1 short phrase. Do NOT over-explain.
 
