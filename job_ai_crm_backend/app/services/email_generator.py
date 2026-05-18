@@ -80,8 +80,6 @@ def generate_email(
         else ""
     )
 
-    cv_skills = _extract_cv_skills(cv.content_text or "", role)
-
     prompt = f"""
 You are writing a REALISTIC, short and natural email. It must feel like a real human wrote it.
 
@@ -91,9 +89,6 @@ Company:
 
 Target Role:
 {role}
-
-What this candidate has BUILT (from full CV analysis — mention this naturally in 1 phrase):
-{cv_skills}
 
 Language:
 - {lang_instruction}
@@ -109,11 +104,10 @@ IMPORTANT RULES:
 - Do NOT assume there is a job opening.
 - Do NOT sound like a template.
 
-SKILL SELECTION (VERY IMPORTANT):
-- Pick ONE skill from the list above that best fits the role "{role}" and the company.
-- Do NOT mention NLP or natural language processing unless the role title explicitly contains "NLP".
-- Do NOT paraphrase or expand the role title. The role is exactly: "{role}".
-- Keep it to 1 short phrase. Do NOT over-explain.
+WHAT TO MENTION ABOUT YOURSELF:
+- Do NOT mention any specific technology, tool, or project.
+- Simply say you are interested in working in this role area.
+- Keep it general and natural — no skill claims.
 
 WHAT TO DO:
 - Write a short message (80–120 words max)
