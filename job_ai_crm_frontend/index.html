@@ -302,6 +302,28 @@
                 <p id="selectedCompanyText" class="text-label-sm text-slate-500">
                   Henüz şirket seçilmedi.
                 </p>
+
+                <div id="companyEmailEditWrapper" class="hidden space-y-xs">
+                  <label class="block text-label-sm text-on-surface" for="companyEmailEdit">
+                    Şirket e-posta adresi
+                  </label>
+                  <div class="flex gap-sm">
+                    <input
+                      id="companyEmailEdit"
+                      type="email"
+                      placeholder="ornek@sirket.com"
+                      class="flex-1 px-md py-sm bg-white border border-outline-variant rounded-lg text-body-md focus:ring-2 focus:ring-primary focus:border-primary transition-all"
+                    />
+                    <button
+                      type="button"
+                      id="btnSaveCompanyEmail"
+                      class="px-md py-sm bg-primary text-on-primary rounded-lg hover:bg-surface-tint transition-all text-label-sm font-medium whitespace-nowrap"
+                    >
+                      Kaydet
+                    </button>
+                  </div>
+                  <p id="companyEmailSaveMsg" class="text-label-sm hidden"></p>
+                </div>
               </div>
 
               <div id="mailInputWrapper" class="hidden space-y-md">

@@ -532,10 +532,60 @@ async function saveContactEmail() {
   }
 }
 
+function showCompanyEmailEdit(company) {
+  const wrapper = $("companyEmailEditWrapper");
+  const input = $("companyEmailEdit");
+  const msg = $("companyEmailSaveMsg");
+  if (!wrapper || !input) return;
+  wrapper.classList.remove("hidden");
+  input.value = company.contact_email || "";
+  if (msg) { msg.textContent = ""; msg.classList.add("hidden"); }
+}
+
+async function saveCompanyEmail() {
+  const companyId = ($("selectedCompanyId")?.value || "").trim();
+  const email = ($("companyEmailEdit")?.value || "").trim();
+  const msg = $("companyEmailSaveMsg");
+
+  if (!companyId) return;
+  if (!isValidEmail(email)) {
+    if (msg) { msg.textContent = "Geçerli bir e-posta girin."; msg.className = "text-label-sm text-red-500"; msg.classList.remove("hidden"); }
+    return;
+  }
+
+  const btn = $("btnSaveCompanyEmail");
+  if (btn) btn.disabled = true;
+
+  try {
+    const res = await authFetch(`/companies/${companyId}/contact-email`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ contact_email: email }),
+    });
+    if (!res.ok) throw new Error(await parseErrorDetail(res));
+    const data = await res.json();
+    const saved = data.contact_email || email;
+    setContactEmail(saved);
+    const idx = companies.findIndex(c => String(c.id) === String(companyId));
+    if (idx !== -1) companies[idx].contact_email = saved;
+    renderCompanyList(filterCompaniesBySearch($("companySearch")?.value || ""));
+    if (msg) { msg.textContent = "Kaydedildi."; msg.className = "text-label-sm text-green-600"; msg.classList.remove("hidden"); }
+  } catch (e) {
+    if (msg) { msg.textContent = e.message || "Kaydedilemedi."; msg.className = "text-label-sm text-red-500"; msg.classList.remove("hidden"); }
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
 function setupContactEmailEditor() {
   if ($("btnSaveContactEmail")) {
     $("btnSaveContactEmail").addEventListener("click", async () => {
       await saveContactEmail();
+    });
+  }
+  if ($("btnSaveCompanyEmail")) {
+    $("btnSaveCompanyEmail").addEventListener("click", async () => {
+      await saveCompanyEmail();
     });
   }
 }
@@ -690,6 +740,7 @@ function renderCompanyList(list) {
         company.name || company.website || company.id
       }`;
       setContactEmail(company.contact_email);
+      showCompanyEmailEdit(company);
       setChatCompanyInfo();
       clearCompanyChat();
       updateCompanyContactActions();

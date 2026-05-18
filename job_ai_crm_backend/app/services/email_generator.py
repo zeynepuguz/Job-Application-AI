@@ -24,14 +24,15 @@ def _extract_cv_skills(cv_text: str, role: str) -> str:
                     "content": (
                         f'Target role: "{role}"\n\n'
                         f"CV:\n{cv_text[:8000]}\n\n"
-                        "From the CV above, identify the candidate's TOP 3 technical skills most relevant to "
-                        f'the role "{role}".\n'
+                        "Read the ENTIRE CV above and identify the candidate's PRIMARY technical expertise — "
+                        "the area that makes up the majority of their work and projects.\n\n"
                         "STRICT RULES:\n"
-                        "- Look at the candidate's MAIN projects and primary work experience.\n"
-                        "- IGNORE internship-level or minor side experience.\n"
-                        "- IGNORE NLP/natural language processing UNLESS the target role explicitly says 'NLP'.\n"
-                        "- Return ONLY a comma-separated list of 3 short skill phrases.\n"
-                        "- No bullets, no explanations, no JSON, no extra text."
+                        "- Base your answer on what DOMINATES the CV, not isolated mentions.\n"
+                        "- IGNORE one-time internship topics or minor side projects.\n"
+                        "- IGNORE NLP/natural language processing UNLESS it is the main theme of the CV.\n"
+                        "- Return 1-2 short phrases that best describe the candidate's core expertise.\n"
+                        "- No bullets, no explanations, no JSON, no extra text.\n"
+                        "Example output: RAG systems, LLM application development"
                     )
                 }
             ]
@@ -99,6 +100,7 @@ Language:
 {extra_block}
 
 IMPORTANT RULES:
+- Do NOT write "Subject:" anywhere in the body — the subject is handled separately.
 - This is NOT a CV summary.
 - Do NOT list experiences.
 - Do NOT mention multiple projects.
