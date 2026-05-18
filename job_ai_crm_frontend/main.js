@@ -1053,7 +1053,7 @@ $("btnGenerate").addEventListener("click", async () => {
       language,
       url,
       user_instruction: userInstruction || null,
-      cv_role_type: suggestedCvKey,
+      cv_id: $("cvSelector")?.value || null,
     };
     companyDisplay = url;
   } else if (mode === "company") {
@@ -1067,6 +1067,7 @@ $("btnGenerate").addEventListener("click", async () => {
       language,
       company_id: companyId,
       user_instruction: userInstruction || null,
+      cv_id: $("cvSelector")?.value || null,
     };
 
     const selectedCompany = companies.find((c) => c.id === companyId);

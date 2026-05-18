@@ -7,6 +7,36 @@ load_dotenv()
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 
+def _extract_cv_skills(cv_text: str, role: str) -> str:
+    if not cv_text.strip():
+        return "Not specified"
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            temperature=0,
+            messages=[
+                {
+                    "role": "system",
+                    "content": "You extract the most relevant technical skills from CVs. Be concise and accurate."
+                },
+                {
+                    "role": "user",
+                    "content": (
+                        f'Target role: "{role}"\n\n'
+                        f"CV:\n{cv_text[:8000]}\n\n"
+                        "From the FULL CV above, list the 3 most relevant technical skills or experiences "
+                        "for this target role. Return ONLY a comma-separated list of short skill phrases. "
+                        "No bullets, no explanations, no JSON. Focus on what is central to the candidate's "
+                        "main work — do not pick minor internship topics unless the role explicitly requires them."
+                    )
+                }
+            ]
+        )
+        return response.choices[0].message.content.strip()
+    except Exception:
+        return (cv_text[:1500]).strip()
+
+
 def generate_email(
     company,
     cv,
@@ -45,7 +75,7 @@ def generate_email(
         else ""
     )
 
-    cv_snippet = (cv.content_text or "")[:3000].strip()
+    cv_skills = _extract_cv_skills(cv.content_text or "", role)
 
     prompt = f"""
 You are writing a REALISTIC, short and natural email. It must feel like a real human wrote it.
@@ -57,8 +87,8 @@ Company:
 Target Role:
 {role}
 
-Candidate CV (use this to pick ONE genuine skill to mention):
-{cv_snippet}
+Candidate's top skills for this role (extracted from full CV — use ONE of these):
+{cv_skills}
 
 Language:
 - {lang_instruction}

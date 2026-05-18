@@ -195,7 +195,12 @@ def prepare_application(
             except Exception as e:
                 print("PINECONE UPSERT ERROR:", e)
 
-    cv = choose_best_cv(db, request.role)
+    if request.cv_id:
+        cv = db.query(CV).filter(CV.id == request.cv_id, CV.is_active == True).first()
+        if not cv:
+            cv = choose_best_cv(db, request.role)
+    else:
+        cv = choose_best_cv(db, request.role)
 
     if not cv:
         raise HTTPException(

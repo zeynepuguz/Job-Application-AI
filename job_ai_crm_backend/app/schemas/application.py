@@ -24,6 +24,7 @@ class PrepareApplicationRequest(BaseModel):
     role: str
     language: str | None = None
     user_instruction: str | None = None
+    cv_id: str | None = None
 
 
 class PrepareApplicationResponse(BaseModel):
