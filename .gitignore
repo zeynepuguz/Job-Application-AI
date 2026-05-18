@@ -2,6 +2,9 @@
 .env
 *.env
 
+# OAuth token helper (contains credentials — local only)
+get_gmail_token.py
+
 # Python
 __pycache__/
 **/__pycache__/
