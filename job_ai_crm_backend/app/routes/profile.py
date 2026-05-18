@@ -54,7 +54,7 @@ async def upload_cv(
     if not text.strip():
         raise HTTPException(status_code=400, detail="PDF'ten metin çıkarılamadı.")
 
-    db.query(CV).filter(CV.role_type == role_type).update({"is_active": False})
+    db.query(CV).filter(CV.role_type == role_type).delete()
 
     file_data_b64 = base64.b64encode(content).decode("utf-8")
     cv = CV(title=title, role_type=role_type, content_text=text,
