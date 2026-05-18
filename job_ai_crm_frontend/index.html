@@ -26,7 +26,40 @@
       .material-symbols-outlined {
         font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
       }
+
+      /* Dark mode overrides */
+      html.dark body { background-color: #0f172a; color: #e2e8f0; }
+      html.dark .bg-background,
+      html.dark .bg-surface { background-color: #0f172a !important; }
+      html.dark .bg-surface-container-lowest { background-color: #1e293b !important; }
+      html.dark .bg-surface-container-low { background-color: #1e293b !important; }
+      html.dark .bg-surface-container { background-color: #243447 !important; }
+      html.dark .bg-surface-container-high { background-color: #2d3f56 !important; }
+      html.dark .bg-surface-container-highest { background-color: #354b65 !important; }
+      html.dark .bg-white { background-color: #1e293b !important; }
+      html.dark .text-on-surface,
+      html.dark .text-on-background { color: #e2e8f0 !important; }
+      html.dark .text-slate-500 { color: #94a3b8 !important; }
+      html.dark .text-slate-800,
+      html.dark .text-slate-900 { color: #e2e8f0 !important; }
+      html.dark .border-outline-variant { border-color: #334155 !important; }
+      html.dark .border-slate-200 { border-color: #334155 !important; }
+      html.dark input:not([type="radio"]):not([type="checkbox"]):not([type="file"]):not([type="hidden"]),
+      html.dark textarea,
+      html.dark select { background-color: #1e293b !important; color: #e2e8f0 !important; border-color: #475569 !important; }
+      html.dark input::placeholder,
+      html.dark textarea::placeholder { color: #64748b !important; }
+      html.dark header { background-color: rgba(15,23,42,0.97) !important; border-color: #334155 !important; }
+      html.dark .text-on-surface-variant { color: #94a3b8 !important; }
     </style>
+
+    <script>
+      (function() {
+        if (localStorage.getItem('theme') === 'dark') {
+          document.documentElement.classList.add('dark');
+        }
+      })();
+    </script>
 
     <script id="tailwind-config">
       tailwind.config = {
@@ -158,6 +191,15 @@
             <span class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-medium rounded-full pointer-events-none">Değiştir</span>
           </button>
           <input id="avatarInput" type="file" accept="image/*" aria-label="Profil fotoğrafı seç" class="hidden" />
+          <button id="themeToggle" type="button" title="Tema değiştir"
+            class="text-slate-500 hover:text-slate-800 transition-colors focus:outline-none" aria-label="Tema değiştir">
+            <svg id="iconSun" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707M17.657 17.657l-.707-.707M6.343 6.343l-.707-.707M12 8a4 4 0 100 8 4 4 0 000-8z"/>
+            </svg>
+            <svg id="iconMoon" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+            </svg>
+          </button>
           <button id="cvSettingsBtn" type="button" title="CV Yönetimi"
             class="text-slate-500 hover:text-slate-800 transition-colors focus:outline-none" aria-label="CV ayarları">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">

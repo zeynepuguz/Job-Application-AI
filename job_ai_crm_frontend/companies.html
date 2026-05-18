@@ -14,13 +14,22 @@
       rel="stylesheet"
     />
     <style>
-      body {
-        font-family: "Inter", sans-serif;
-      }
-      .material-symbols-outlined {
-        font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
-      }
+      body { font-family: "Inter", sans-serif; }
+      .material-symbols-outlined { font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24; }
+      html.dark body { background-color: #0f172a; color: #e2e8f0; }
+      html.dark header { background-color: rgba(15,23,42,0.97) !important; border-color: #334155 !important; }
+      html.dark .bg-white { background-color: #1e293b !important; }
+      html.dark .bg-slate-50 { background-color: #0f172a !important; }
+      html.dark .text-slate-900 { color: #e2e8f0 !important; }
+      html.dark .text-slate-700 { color: #cbd5e1 !important; }
+      html.dark .text-slate-500 { color: #94a3b8 !important; }
+      html.dark .text-slate-400 { color: #64748b !important; }
+      html.dark .border-slate-200,
+      html.dark .border-slate-300 { border-color: #334155 !important; }
+      html.dark .hover\:bg-slate-100:hover { background-color: #1e293b !important; }
+      html.dark input, html.dark textarea, html.dark select { background-color: #1e293b !important; color: #e2e8f0 !important; border-color: #475569 !important; }
     </style>
+    <script>(function(){ if(localStorage.getItem('theme')==='dark') document.documentElement.classList.add('dark'); })();</script>
   </head>
   <body class="bg-slate-50 text-slate-900 min-h-screen">
     <header class="sticky top-0 z-20 border-b border-slate-200 bg-white/95 backdrop-blur">
@@ -32,6 +41,10 @@
         <div class="flex items-center gap-2">
           <a href="./applications.html" class="px-4 py-2 text-sm rounded-lg border border-slate-300 hover:bg-slate-100">Başvurular</a>
           <a href="./index.html" class="px-4 py-2 text-sm rounded-lg border border-slate-300 hover:bg-slate-100">Yeni Başvuru</a>
+          <button id="themeToggle" type="button" title="Tema değiştir" class="p-1 text-slate-500 hover:text-slate-800 transition-colors">
+            <svg id="iconSun" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707M17.657 17.657l-.707-.707M6.343 6.343l-.707-.707M12 8a4 4 0 100 8 4 4 0 000-8z"/></svg>
+            <svg id="iconMoon" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+          </button>
         </div>
       </div>
     </header>
@@ -67,5 +80,15 @@
     </main>
 
     <script type="module" src="./companies.js"></script>
+    <script>
+      (function(){
+        const btn=document.getElementById('themeToggle');
+        const sun=document.getElementById('iconSun');
+        const moon=document.getElementById('iconMoon');
+        function apply(dark){ document.documentElement.classList.toggle('dark',dark); if(sun) sun.classList.toggle('hidden',!dark); if(moon) moon.classList.toggle('hidden',dark); localStorage.setItem('theme',dark?'dark':'light'); }
+        apply(document.documentElement.classList.contains('dark'));
+        btn?.addEventListener('click',()=>apply(!document.documentElement.classList.contains('dark')));
+      })();
+    </script>
   </body>
 </html>

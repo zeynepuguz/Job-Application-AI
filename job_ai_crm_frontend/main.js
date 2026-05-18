@@ -1415,6 +1415,23 @@ setupApplicationMode();
 setupContactEmailEditor();
 setupCompanyChat();
 loadUserCvs();
+
+(function setupThemeToggle() {
+  const btn = $("themeToggle");
+  const sun = $("iconSun");
+  const moon = $("iconMoon");
+  if (!btn) return;
+  function applyTheme(dark) {
+    document.documentElement.classList.toggle("dark", dark);
+    if (sun) sun.classList.toggle("hidden", !dark);
+    if (moon) moon.classList.toggle("hidden", dark);
+    localStorage.setItem("theme", dark ? "dark" : "light");
+  }
+  applyTheme(document.documentElement.classList.contains("dark"));
+  btn.addEventListener("click", () => {
+    applyTheme(!document.documentElement.classList.contains("dark"));
+  });
+})();
 setChatCompanyInfo();
 clearCompanyChat();
 updateCompanyContactActions();
