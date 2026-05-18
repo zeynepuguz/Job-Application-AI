@@ -1,6 +1,7 @@
 import base64
 import os
 import smtplib
+from email.header import Header
 from email.message import EmailMessage
 from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
@@ -37,7 +38,16 @@ def _send_via_gmail_api(to_email, subject, body, client_id, client_secret, refre
     )
     creds.refresh(Request())
 
+    full_name = os.getenv("FULL_NAME", "")
+    from_addr = os.getenv("EMAIL_ADDRESS", "")
+    if full_name and from_addr:
+        encoded_name = Header(full_name, charset="utf-8").encode()
+        from_header = f"{encoded_name} <{from_addr}>"
+    else:
+        from_header = from_addr or ""
+
     msg = MIMEMultipart()
+    msg["from"] = from_header
     msg["to"] = to_email
     msg["subject"] = subject
     msg.attach(MIMEText(body, "plain", "utf-8"))
