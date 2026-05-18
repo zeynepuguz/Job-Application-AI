@@ -74,10 +74,9 @@ IMPORTANT RULES:
 - Do NOT sound like a template.
 
 SKILL SELECTION (VERY IMPORTANT):
-- Pick ONE real skill from the CV that best matches the role and company.
-- Prefer: RAG systems, LLM applications, multi-agent systems, end-to-end AI pipelines.
-- Use NLP ONLY if the role explicitly requires NLP — do NOT default to NLP for general AI roles.
-- If the role includes "backend", prefer FastAPI, backend AI integration skills.
+- Read the CV carefully and find the ONE skill or experience that best matches the target role "{role}".
+- Do NOT default to any specific technology — pick what is actually in the CV and fits the role.
+- Do NOT paraphrase or expand the role title. The role is exactly: "{role}".
 - Keep it to 1 short phrase. Do NOT over-explain.
 
 WHAT TO DO:
