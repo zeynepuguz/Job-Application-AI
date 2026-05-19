@@ -1,99 +1,83 @@
 # Job AI CRM — Frontend
 
-Bu klasör, Job AI CRM uygulamasının kullanıcı arayüzünü içerir. Arayüz Vite ile çalışır ve backend API’sine istek atar.
+Job AI CRM uygulamasının kullanıcı arayüzü. Vite ile çalışır, backend API'sine istek atar.
 
 ## Teknolojiler
 
 - HTML + Vanilla JavaScript
-- Tailwind (CDN üzerinden)
+- Tailwind CSS (CDN)
 - Vite
 
 ## Sayfalar
 
-- `index.html` / `main.js`  
-  Ana başvuru akışı + şirket chatbot (RAG) ekranı
-- `companies.html` / `companies.js`  
-  Şirket listeleme/görüntüleme
-- `applications.html` / `applications.js`  
-  Başvuru kayıtları ekranı
+- `index.html` / `main.js` — Ana başvuru akışı + şirket chatbot
+- `companies.html` / `companies.js` — Şirket listeleme ve başvuru durumu görüntüleme
+- `applications.html` / `applications.js` — Başvuru kayıtları ekranı
 
-## Kurulum
+## Kurulum ve Çalıştırma
 
 ```bash
 npm install
-```
-
-## Çalıştırma
-
-```bash
 npm run dev
 ```
 
-Varsayılan adres: `http://127.0.0.1:5174`
-
-## Build ve Preview
+Varsayılan adres: `http://localhost:5174`
 
 ```bash
 npm run build
 npm run preview
 ```
 
-## Backend Bağımlılığı
+## Ana Özellikler
 
-Frontend, API çağrılarını backend’e yapar. Backend çalışmıyorsa:
+### Başvuru Modları (index)
+- **URL ile yeni şirket:** Şirket sitesi taranır, e-posta üretilir
+- **Kayıtlı şirket seç:** Daha önce eklenen şirketlerden seçim
+- **Mail / ilan ile üret:** İlan metni veya alıcı bilgisiyle AI agent pipeline tetiklenir
 
-- şirket listesi yüklenmez,
-- e-posta üretimi ve gönderimi başarısız olur,
-- şirket chatbot yanıt üretemez.
+### E-posta Yönetimi
+- Hedef rol + dil seçimi ile taslak e-posta oluşturma
+- Yazılı talimatla konu/gövde düzenleme (refine)
+- İletişim e-postası bulunamadıysa elle girme veya değiştirme
+- Geçerli iletişim e-postası yoksa gönder butonu pasif
 
-Bu nedenle geliştirme sırasında backend’in de açık olması gerekir.
+### CV Yönetimi
+- Role göre önerilen CV kartı
+- Birden fazla CV yüklenebilir, aktif CV değiştirilebilir
 
-## Ana Özellikler (index)
+### Şirket Chatbot (RAG)
+- Seçili şirkete soru sorabilme
+- Sohbet geçmişini arayüzde görme
+- Enter ile hızlı gönderim
+- Sohbet temizleme
 
-- **Başvuru modu:**
-  - URL ile yeni şirket
-  - Kayıtlı şirket seç
-- **E-posta üretimi:** hedef rol + dil ile taslak e-posta oluşturma
-- **CV kartı:** role göre önerilen CV bilgisini gösterme
-- **Refine:** yazılı talimatla konu/gövde düzenleme
-- **Manuel iletişim e-postası düzenleme:**
-  - Mail bulunamadıysa elle girme
-  - Bulunan mail yanlışsa değiştirme
-- **Gönderim kontrolü:** geçerli iletişim e-postası yoksa gönder butonunu pasif tutma
-- **Şirket Chatbot (RAG):**
-  - Seçili şirkete soru sorabilme
-  - Sohbet geçmişini arayüzde görebilme
-  - Enter ile hızlı gönderim
-  - Sohbet temizleme (backend `DELETE` endpoint çağrısı ile)
+### Arayüz
+- Karanlık / Aydınlık tema (localStorage'da saklanır)
+- Responsive tasarım
 
-## API Beklentileri (Özet)
+## Kullanılan API Endpoint'leri
 
-Arayüzün kullandığı temel endpoint’ler:
-
-- `GET /companies/`
-- `POST /companies/{company_id}/chat`
-- `DELETE /companies/{company_id}/chat`
-- `POST /companies/{company_id}/contact-email`
-- `POST /applications/prepare`
-- `POST /applications/{application_id}/refine-email`
-- `POST /applications/{application_id}/send`
-
-Not: `prepare` yanıtında `application_id`, `company_id`, `contact_email`, `subject`, `body` alanları beklenir.
+| Yöntem | Yol |
+|--------|-----|
+| `GET` | `/companies/` |
+| `POST` | `/companies/analyze-url` |
+| `POST` | `/companies/generate-application-email` |
+| `POST` | `/companies/{id}/contact-email` |
+| `POST` | `/companies/{id}/chat` |
+| `DELETE` | `/companies/{id}/chat` |
+| `GET` | `/applications/sent` |
+| `POST` | `/applications/prepare` |
+| `POST` | `/applications/{id}/refine-email` |
+| `POST` | `/applications/{id}/send` |
+| `PATCH` | `/applications/{id}/status` |
+| `GET` | `/profile/avatar` |
+| `POST` | `/profile/avatar` |
+| `GET` | `/profile/cvs` |
+| `POST` | `/profile/cvs` |
+| `DELETE` | `/profile/cvs/{cv_id}` |
 
 ## Sık Karşılaşılan Sorunlar
 
-- **“İstek başarısız. Backend çalışıyor mu?”**
-  - Backend process’i kapalı olabilir.
-- **Chatbot yanıt vermiyor**
-  - Pinecone/OpenAI env değerlerini ve backend loglarını kontrol edin.
-- **Aynı şirket için tekrar kayıt hatası**
-  - E-posta veya URL zaten kayıtlı olabilir.
-- **Gönderim SMTP hatası**
-  - Backend `.env` içindeki SMTP bilgilerini kontrol edin.
-
-## Geliştirici Notu
-
-`main.js` içinde şirket seçiminde aktif şirket kimliği (`company_id`) takip edilir.  
-Hem chatbot hem mail güncelleme çağrıları seçili şirketin `company_id` değeriyle yapılır; bu sayede farklı şirkete yanlışlıkla işlem yapılması engellenir.
-
-`Sohbeti Temizle` butonu sadece UI temizlemez; seçili şirket varsa backend’e `DELETE /companies/{company_id}/chat` isteği atarak kayıtlı geçmişi de temizler.
+- **"İstek başarısız. Backend çalışıyor mu?"** — Backend process'i kapalı olabilir.
+- **Chatbot yanıt vermiyor** — Pinecone/OpenAI env değerlerini ve backend loglarını kontrol edin.
+- **Gönderim SMTP hatası** — Backend `.env` içindeki SMTP bilgilerini kontrol edin.

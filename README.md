@@ -1,16 +1,17 @@
 # Job AI CRM
 
-AI destekli kişisel iş başvuru takip sistemi. Şirket araştırması, CV'ye dayalı e-posta üretimi, düzenleme ve gönderimi tek akışta.
+AI destekli kişisel iş başvuru takip sistemi. Şirket araştırması, e-posta üretimi, düzenleme ve gönderimi tek akışta.
 
 ## Özellikler
 
-- 3 başvuru modu: URL ile yeni şirket / kayıtlı şirket / ilan metni ile üret
-- AI Agent Pipeline: ilan analizi → strateji → e-posta yazımı → review
-- CV'ye dayalı deneyim çıkarımı (PDF yükle, metin DB'ye kaydedilir)
+- 3 başvuru modu: URL ile yeni şirket / kayıtlı şirket seç / mail veya ilan metni ile üret
+- AI Agent Pipeline: ilan analizi → strateji → e-posta yazımı → kalite review
+- CV yönetimi: PDF yükle, metin veritabanına kaydedilir, role göre otomatik seçilir
 - Şirket Chatbot (RAG — Pinecone)
-- SMTP ile e-posta gönderimi
-- Başvuru takibi (durum, notlar)
+- Gmail API veya SMTP ile e-posta gönderimi
+- Başvuru takibi (durum, notlar, geçmiş)
 - Profil fotoğrafı (veritabanına kaydedilir, cihazlar arası senkron)
+- Karanlık / Aydınlık tema
 
 ---
 
@@ -30,7 +31,7 @@ cd Job-Application-AI
 | [Railway](https://railway.app) | Backend + PostgreSQL hosting | ✓ (5 $/ay kredi) |
 | [OpenAI](https://platform.openai.com) | E-posta üretimi (GPT-4o-mini) | Ücretli (kullanım bazlı) |
 | [Pinecone](https://pinecone.io) | Şirket bilgisi RAG | ✓ |
-| Gmail | SMTP e-posta gönderimi | ✓ |
+| Gmail | E-posta gönderimi (API veya SMTP) | ✓ |
 
 ### 3. Railway'de proje oluştur
 
@@ -43,9 +44,6 @@ cd Job-Application-AI
 Aşağıdaki değerleri kendi bilgilerinle doldur ve Railway Variables'a yapıştır:
 
 ```env
-# Veritabanı (Railway otomatik ekler, bunu ekleme)
-# DATABASE_URL=...
-
 # OpenAI
 OPENAI_API_KEY=sk-proj-...
 
@@ -67,10 +65,17 @@ LINKEDIN_URL=https://linkedin.com/in/kullanici-adin
 PORTFOLIO_URL=https://portfoyun.com
 GITHUB_URL=https://github.com/kullanici-adin
 
-# Gmail SMTP (e-posta göndermek için)
+# Gmail SMTP (e-posta göndermek için — yeterli)
 SMTP_EMAIL=eposta@gmail.com
 SMTP_APP_PASSWORD=xxxx xxxx xxxx xxxx
+
+# Gmail API (isteğe bağlı — ayarlıysa SMTP yerine kullanılır)
+# GMAIL_CLIENT_ID=...
+# GMAIL_CLIENT_SECRET=...
+# GMAIL_REFRESH_TOKEN=...
 ```
+
+> **Not:** `DATABASE_URL` Railway tarafından otomatik eklenir — kendin ekleme.
 
 > **Gmail App Password nasıl alınır?**
 > Google Hesabım → Güvenlik → 2 Adımlı Doğrulama (aktif olmalı) → Uygulama Şifreleri → "Mail" için şifre oluştur
@@ -82,7 +87,7 @@ Railway `web-xxxx.up.railway.app` formatında bir URL verir. Bu URL'e git, `APP_
 ### 6. CV yükle (ilk kurulum)
 
 1. Sağ üstte **⚙️** simgesine tıkla
-2. Pozisyon türünü seç (AI Engineer CV / Backend AI Engineer CV)
+2. Pozisyon türünü seç (AI Engineer / Backend AI Engineer)
 3. Bir başlık yaz ve PDF dosyasını seç → **Yükle**
 4. Backend metni otomatik çıkarır, veritabanına kaydeder
 
@@ -125,6 +130,9 @@ PORTFOLIO_URL=...
 GITHUB_URL=...
 SMTP_EMAIL=...
 SMTP_APP_PASSWORD=...
+# CV otomatik seed için (isteğe bağlı, Railway'de çalışmaz)
+# AI_ENGINEER_CV_PATH=C:\...\AI_Engineer_CV.pdf
+# BACKEND_AI_ENGINEER_CV_PATH=C:\...\Backend_AI_Engineer_CV.pdf
 ```
 
 ```bash
@@ -155,7 +163,7 @@ Frontend: `http://localhost:5174`
 | AI | OpenAI GPT-4o-mini |
 | RAG | Pinecone |
 | Scraping | Requests, BeautifulSoup |
-| E-posta | SMTP (Gmail) |
+| E-posta | Gmail API / SMTP (Gmail) |
 | Frontend | Vanilla JS, TailwindCSS, Vite |
 
 ---
@@ -163,5 +171,5 @@ Frontend: `http://localhost:5174`
 ## Notlar
 
 - `.env` ve CV dosyaları git'e **eklenmez** (`.gitignore`'da)
-- CV dosyaları Railway'de kalıcı değildir — uygulama içinden tekrar yükle
+- CV metinleri veritabanında saklanır — Railway'de kalıcıdır
 - Pinecone index adı `job-ai-crm` olarak ayarlanmalıdır (veya `.env`'de değiştir)
