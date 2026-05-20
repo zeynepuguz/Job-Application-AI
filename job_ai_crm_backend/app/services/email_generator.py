@@ -105,15 +105,15 @@ IMPORTANT RULES:
 - Do NOT sound like a template.
 
 WHAT TO MENTION ABOUT YOURSELF:
-- Do NOT mention any specific technology, tool, or project.
-- Simply say you are interested in working in this role area.
-- Keep it general and natural — no skill claims.
+- Do NOT mention any specific technology, tool, project, or area of expertise.
+- Do NOT write things like "data analysis", "machine learning", "software development", "AI", or any field name.
+- Simply say you are interested in working in this role at this company.
+- Zero skill claims. Zero focus areas. Zero background details.
 
 WHAT TO DO:
 - Write a short message (80–120 words max)
 - Mention the company briefly (1 sentence)
-- Say you are interested in working in this role area
-- Mention ONLY ONE small relevant skill or focus area based on the role
+- Say you are interested in working in this role at this company
 - Ask if there could be a suitable opportunity
 - Keep it simple and natural
 
