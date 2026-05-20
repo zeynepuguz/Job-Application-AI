@@ -170,3 +170,4 @@ Frontend: `http://localhost:5174`
 - `.env` ve CV dosyaları git'e **eklenmez** (`.gitignore`'da)
 - CV metinleri veritabanında saklanır — Railway'de kalıcıdır
 - Pinecone index adı `job-ai-crm` olarak ayarlanmalıdır (veya `.env`'de değiştir)
+- Gmail API ayarlıysa SMTP yerine otomatik olarak kullanılır
