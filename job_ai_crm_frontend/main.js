@@ -1279,6 +1279,14 @@ $("cvSelector").addEventListener("change", (e) => {
   syncCvCard(e.target.value);
 });
 
+$("targetRole").addEventListener("input", () => {
+  if (userCvs.length < 2) return;
+  const role = $("targetRole").value.trim();
+  if (!role) return;
+  const suggested = suggestCvFromText(role, "");
+  syncCvCard(suggested);
+});
+
 $("btnRefine").addEventListener("click", async () => {
   clearError();
 
