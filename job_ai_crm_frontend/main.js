@@ -291,7 +291,7 @@ function suggestCvFromText(role, jobDescription) {
   let best = userCvs[0], bestScore = -1;
   for (const cv of userCvs) {
     const words = (cv.title || "").toLowerCase().split(/\s+/);
-    const score = words.filter(w => w.length > 2 && text.includes(w)).length;
+    const score = words.filter(w => w.length >= 2 && text.includes(w)).length;
     if (score > bestScore) { bestScore = score; best = cv; }
   }
   return best.id;
