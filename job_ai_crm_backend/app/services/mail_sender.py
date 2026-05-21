@@ -40,11 +40,7 @@ def _send_via_gmail_api(to_email, subject, body, client_id, client_secret, refre
 
     full_name = os.getenv("FULL_NAME", "")
     from_addr = os.getenv("EMAIL_ADDRESS", "")
-    if full_name and from_addr:
-        encoded_name = Header(full_name, charset="utf-8").encode()
-        from_header = f"{encoded_name} <{from_addr}>"
-    else:
-        from_header = from_addr or ""
+    from_header = f"{full_name} <{from_addr}>" if full_name and from_addr else from_addr or ""
 
     msg = MIMEMultipart()
     msg["from"] = from_header
@@ -117,16 +113,19 @@ def send_real_email(
     gmail_refresh_token = os.getenv("GMAIL_REFRESH_TOKEN")
 
     if gmail_client_id and gmail_client_secret and gmail_refresh_token:
-        _send_via_gmail_api(
-            to_email=to_email,
-            subject=subject,
-            body=body,
-            client_id=gmail_client_id,
-            client_secret=gmail_client_secret,
-            refresh_token=gmail_refresh_token,
-            attachments=attachments,
-        )
-        return
+        try:
+            _send_via_gmail_api(
+                to_email=to_email,
+                subject=subject,
+                body=body,
+                client_id=gmail_client_id,
+                client_secret=gmail_client_secret,
+                refresh_token=gmail_refresh_token,
+                attachments=attachments,
+            )
+            return
+        except Exception as e:
+            print(f"Gmail API failed, falling back to SMTP: {e}")
 
     # SendGrid fallback
     sendgrid_key = os.getenv("SENDGRID_API_KEY")
