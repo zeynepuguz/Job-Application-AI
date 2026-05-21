@@ -157,6 +157,34 @@ End EXACTLY with:
 
     email_body = response.choices[0].message.content.strip()
 
+    subject_response = client.chat.completions.create(
+        model="gpt-4o-mini",
+        temperature=0.4,
+        messages=[
+            {
+                "role": "system",
+                "content": "You write short, natural email subject lines."
+            },
+            {
+                "role": "user",
+                "content": (
+                    f"Write a short, natural subject line for this job application email.\n"
+                    f"Company: {company.name}\n"
+                    f"Role: {role}\n"
+                    f"Language: {'Turkish' if lang == 'tr' else 'English'}\n\n"
+                    f"Rules:\n"
+                    f"- Max 6 words\n"
+                    f"- Do NOT use English role names in Turkish emails — translate naturally\n"
+                    f"- Do NOT write 'Subject:' or quotes\n"
+                    f"- Sound human, not like a template\n"
+                    f"- No exclamation marks\n"
+                    f"- Return only the subject line, nothing else"
+                )
+            }
+        ]
+    )
+    subject = subject_response.choices[0].message.content.strip()
+
     return {
         "subject": subject,
         "body": email_body
