@@ -208,10 +208,12 @@ def prepare_application(
             detail="Aktif CV bulunamadı. Lütfen ⚙️ menüsünden CV yükleyin."
         )
 
+    role = cv.title if cv else (request.role or "")
+
     result = generate_email(
         company=company,
         cv=cv,
-        role=request.role,
+        role=role,
         language=request.language,
         user_instruction=request.user_instruction,
     )
@@ -220,7 +222,7 @@ def prepare_application(
         company_id=company.id,
         cv_id=cv.id,
         role_type=cv.role_type,
-        position_title=request.role,
+        position_title=role,
         status="draft",
         source=company.website
     )

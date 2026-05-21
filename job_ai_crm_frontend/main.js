@@ -1076,35 +1076,36 @@ $("btnGenerate").addEventListener("click", async () => {
   const mode = getApplicationMode();
   const url = $("companyUrl").value.trim();
   const companyId = ($("selectedCompanyId")?.value || "").trim();
-  const role = $("targetRole").value.trim();
   const language = $("language").value;
   const companyName = ($("companyName")?.value || "").trim();
   const recipientEmail = ($("recipientEmail")?.value || "").trim();
   const jobDescription = ($("jobDescription")?.value || "").trim();
   const userInstruction = readUserInstruction();
 
+  const selectedCvId = $("cvSelector")?.value || "";
+  const selectedCv = userCvs.find(c => c.id === selectedCvId);
+  if (!selectedCvId || !selectedCv) {
+    setError("Lütfen bir CV seçin.");
+    return;
+  }
+  const role = selectedCv.title;
+  if ($("targetRole")) $("targetRole").value = role;
+
   let payload = {};
   let companyDisplay = "";
   let endpoint = "/applications/prepare";
-
-  if (mode !== "mail" && !role) {
-    setError("Hedef pozisyon zorunludur.");
-    return;
-  }
 
   if (mode === "url") {
     if (!url) {
       setError("Şirket / Kariyer URL zorunludur.");
       return;
     }
-    const suggestedCvKey = suggestCvFromText(role, jobDescription);
-    syncCvCard(suggestedCvKey);
     payload = {
       role,
       language,
       url,
       user_instruction: userInstruction || null,
-      cv_id: $("cvSelector")?.value || null,
+      cv_id: selectedCvId,
     };
     companyDisplay = url;
   } else if (mode === "company") {
@@ -1118,7 +1119,7 @@ $("btnGenerate").addEventListener("click", async () => {
       language,
       company_id: companyId,
       user_instruction: userInstruction || null,
-      cv_id: $("cvSelector")?.value || null,
+      cv_id: selectedCvId,
     };
 
     const selectedCompany = companies.find((c) => c.id === companyId);
@@ -1144,16 +1145,13 @@ $("btnGenerate").addEventListener("click", async () => {
 
     endpoint = "/companies/generate-application-email";
 
-    const suggestedCvKey = suggestCvFromText(role, jobDescription);
-    syncCvCard(suggestedCvKey);
-
     payload = {
       company_name: companyName || null,
-      position: role || null,
+      position: role,
       recipient_email: recipientEmail || null,
       job_description: jobDescription || null,
       user_instruction: userInstruction || null,
-      cv_id: suggestedCvKey || null,
+      cv_id: selectedCvId,
       language: language || "tr",
     };
 

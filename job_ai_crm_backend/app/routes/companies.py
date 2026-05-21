@@ -300,9 +300,11 @@ def generate_application_email(
                 best_score, best = score, c
         cv = best
 
+    position = cv.title if cv else (request.position or "")
+
     agent_result = generate_agentic_email(
         company_name=company_name or None,
-        role=request.position,
+        role=position,
         job_description=request.job_description,
         user_instruction=request.user_instruction,
         memory=memory_payload,
