@@ -168,15 +168,16 @@ End EXACTLY with:
             {
                 "role": "user",
                 "content": (
-                    f"Write a short, natural subject line for this job application email.\n"
+                    f"Write a professional subject line for a job application email.\n"
                     f"Company: {company.name}\n"
                     f"Role: {role}\n"
                     f"Language: {'Turkish' if lang == 'tr' else 'English'}\n\n"
                     f"Rules:\n"
                     f"- Max 6 words\n"
-                    f"- Do NOT use English role names in Turkish emails — translate naturally\n"
-                    f"- Do NOT write 'Subject:' or quotes\n"
-                    f"- Sound human, not like a template\n"
+                    f"- Turkish emails: write entirely in Turkish, no English words\n"
+                    f"- Turkish emails: use 'Başvurusu' not 'Başvurum' — keep it formal\n"
+                    f"- Turkish emails: translate the role to Turkish naturally (e.g. 'AI Mühendisi', 'Yazılım Geliştirici')\n"
+                    f"- Do NOT write 'Subject:' or use quotes\n"
                     f"- No exclamation marks\n"
                     f"- Return only the subject line, nothing else"
                 )
