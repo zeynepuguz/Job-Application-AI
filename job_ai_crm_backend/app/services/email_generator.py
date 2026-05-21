@@ -177,6 +177,7 @@ End EXACTLY with:
                     f"- Turkish emails: write entirely in Turkish, no English words\n"
                     f"- Turkish emails: use 'Başvurusu' not 'Başvurum' — keep it formal\n"
                     f"- Turkish emails: translate the role to Turkish naturally (e.g. 'AI Mühendisi', 'Yazılım Geliştirici')\n"
+                    f"- Do NOT include the company name in the subject\n"
                     f"- Do NOT write 'Subject:' or use quotes\n"
                     f"- No exclamation marks\n"
                     f"- Return only the subject line, nothing else"
