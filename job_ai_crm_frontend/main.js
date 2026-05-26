@@ -901,7 +901,7 @@ function upsertApplicationRecord(patch) {
     items[idx] = {
       ...items[idx],
       ...patch,
-      cvLabel: patch.cvLabel || (userCvs.find(c => c.id === (patch.cvKey || items[idx].cvKey))?.title ?? ""),
+      cvLabel: patch.cvLabel || (userCvs.find(c => c.id === (patch.cvKey || items[idx].cvKey))?.title) || items[idx].cvLabel || "",
       updatedAt: now,
     };
   }
