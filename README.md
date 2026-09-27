@@ -21,7 +21,7 @@ AI destekli kişisel iş başvuru takip sistemi. Şirket araştırması, e-posta
 ![CV seçimi, RAG ve başvuru gönderimi](docs/image1.png)
 
 ### Başvuru Takibi
-![Başvuru takip ekranı](image2.png)
+![Başvuru takip ekranı](docs/image2.png)
 
 ---
 
