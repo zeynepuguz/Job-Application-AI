@@ -1459,3 +1459,4 @@ if ($("btnRefreshApplications")) {
 }
 
 renderApplicationsList();
+renderApplicationsList();

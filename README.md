@@ -12,6 +12,16 @@ AI destekli kişisel iş başvuru takip sistemi. Şirket araştırması, e-posta
 - Başvuru takibi (durum, notlar, geçmiş)
 - Profil fotoğrafı (veritabanına kaydedilir, cihazlar arası senkron)
 - Karanlık / Aydınlık tema
+## Screenshots
+
+### AI Destekli E-posta Üretimi
+![AI destekli e-posta üretimi](docs/image.png)
+
+### CV, RAG ve Başvuru Gönderimi
+![CV seçimi, RAG ve başvuru gönderimi](docs/image1.png)
+
+### Başvuru Takibi
+![Başvuru takip ekranı](image2.png)
 
 ---
 

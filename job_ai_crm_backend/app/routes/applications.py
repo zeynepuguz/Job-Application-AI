@@ -17,7 +17,6 @@ from app.schemas.application import (
     PrepareApplicationResponse,
     RefineEmailRequest,
     RefineEmailResponse,
-    SendApplicationRequest,
     SendApplicationResponse,
     SentApplicationsResponse,
     UpdateContactEmailRequest,
